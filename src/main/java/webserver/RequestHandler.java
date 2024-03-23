@@ -91,12 +91,33 @@ public class RequestHandler implements Runnable{
             }
 
 
+            // 요구사항 5
+            if(method.equals("GET") && url.equals("/user/login.html")){
+                body = Files.readAllBytes(Paths.get("./webapp/user/login.html"));
+            }
+
+            if(method.equals("POST") && url.equals("/user/login")){
+                String queryString = IOUtils.readData(br, requestContentLength);
+                Map<String,String> m = parseQueryParameter(queryString);
+                User user = repository.findUserById(m.get("userId"));
+                login(dos,m.get("password"),user);
+                return;
+            }
+
             response200Header(dos, body.length);
             responseBody(dos, body);
 
         } catch (IOException e) {
             log.log(Level.SEVERE,e.getMessage());
         }
+    }
+
+    private void login(DataOutputStream dos,String password, User user) {
+        if (user != null && user.getPassword().equals(password)) {
+            response302HeaderWithLogin(dos,"/index.html");
+            return;
+        }
+        response302Header(dos,"/login_failed.html");
     }
 
     private void response200Header(DataOutputStream dos, int lengthOfBodyContent) {
@@ -111,10 +132,24 @@ public class RequestHandler implements Runnable{
         }
     }
 
+    // 요구사항 4
     private void response302Header(DataOutputStream dos, String url) {
         try {
             dos.writeBytes("HTTP/1.1 302 Redirect \r\n");
             dos.writeBytes("Location: " + url + "\r\n");
+            dos.writeBytes("\r\n");
+            dos.flush();
+        } catch (IOException e) {
+            log.log(Level.SEVERE, e.getMessage());
+        }
+    }
+
+    // 요구사항 5
+    private void response302HeaderWithLogin(DataOutputStream dos, String url) {
+        try {
+            dos.writeBytes("HTTP/1.1 302 Redirect \r\n");
+            dos.writeBytes("Location: " + url + "\r\n");
+            dos.writeBytes("Cookie: logined=true");
             dos.writeBytes("\r\n");
             dos.flush();
         } catch (IOException e) {
