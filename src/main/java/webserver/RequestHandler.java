@@ -41,6 +41,20 @@ public class RequestHandler implements Runnable{
 
             byte[] body = new byte[0];
 
+            int requestContentLength = 0;
+
+
+            while (true) {
+                final String line = br.readLine();
+                if (line.equals("")) {
+                    break;
+                }
+                // header info
+                if (line.startsWith("Content-Length")) {
+                    requestContentLength = Integer.parseInt(line.split(": ")[1]);
+                }
+            }
+
             // 요구사항 1
             // / 이거나 index.html이면 바디에 해당 파일을 넘겨야함.
             if(method.equals("GET") && url.equals("/index.html")){
@@ -65,6 +79,17 @@ public class RequestHandler implements Runnable{
                 response302Header(dos,"/index.html");
                 return;
             }
+
+            // 요구사항 3
+            if(method.equals("POST") && url.equals("/user/signup")){
+                String queryString = IOUtils.readData(br, requestContentLength);
+                Map<String,String> m = parseQueryParameter(queryString);
+                User user = new User(m.get("userId"), m.get("password"), m.get("name"), m.get("email"));
+                repository.addUser(user);
+                response302Header(dos,"/index.html");
+                return;
+            }
+
 
             response200Header(dos, body.length);
             responseBody(dos, body);
