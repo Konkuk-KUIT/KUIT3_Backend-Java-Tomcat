@@ -2,6 +2,8 @@ package webserver;
 
 import java.io.*;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,7 +22,23 @@ public class RequestHandler implements Runnable{
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
             DataOutputStream dos = new DataOutputStream(out);
 
-            byte[] body = "Hello World".getBytes();
+            // input stream 확인
+            String startLine = br.readLine();
+            String[] startLines = startLine.split(" ");
+            String method = startLines[0];
+            String url = startLines[1];
+
+            byte[] body = new byte[0];
+
+            // / 이거나 index.html이면 바디에 해당 파일을 넘겨야함.
+            if(method.equals("GET") && url.equals("/index.html")){
+                body = Files.readAllBytes(Paths.get("./webapp" + url));
+            }
+
+            if(method.equals("GET") && url.equals("/")){
+                body = Files.readAllBytes(Paths.get("./webapp/index.html"));
+            }
+
             response200Header(dos, body.length);
             responseBody(dos, body);
 
