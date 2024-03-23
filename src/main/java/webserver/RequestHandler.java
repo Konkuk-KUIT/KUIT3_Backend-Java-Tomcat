@@ -42,6 +42,7 @@ public class RequestHandler implements Runnable{
             byte[] body = new byte[0];
 
             int requestContentLength = 0;
+            String cookie = "";
 
 
             while (true) {
@@ -52,6 +53,10 @@ public class RequestHandler implements Runnable{
                 // header info
                 if (line.startsWith("Content-Length")) {
                     requestContentLength = Integer.parseInt(line.split(": ")[1]);
+                }
+                if(line.startsWith("Cookie")){
+                    cookie = line.split(": ")[1];
+                    cookie = cookie.split(" ")[0];
                 }
             }
 
@@ -101,7 +106,16 @@ public class RequestHandler implements Runnable{
                 Map<String,String> m = parseQueryParameter(queryString);
                 User user = repository.findUserById(m.get("userId"));
                 login(dos,m.get("password"),user);
-                return;
+            }
+
+            // 요구사항 6 -> 문제점 현재 내 pc에서만의 문제인지 모르겠으나 쿠키 값이 여러개이고 ;으로 쿠키값이 끝난다
+            if(method.equals("GET") && url.equals("/user/userList")){
+                if(!(cookie.startsWith("logined=true"))){
+                    log.info(cookie);
+                    response302Header(dos,"/user/login.html");
+                }
+                body = Files.readAllBytes(Paths.get("./webapp/user/list.html"));
+
             }
 
             response200Header(dos, body.length);
@@ -149,7 +163,7 @@ public class RequestHandler implements Runnable{
         try {
             dos.writeBytes("HTTP/1.1 302 Redirect \r\n");
             dos.writeBytes("Location: " + url + "\r\n");
-            dos.writeBytes("Cookie: logined=true");
+            dos.writeBytes("Set-Cookie: logined=true" + "\r\n");
             dos.writeBytes("\r\n");
             dos.flush();
         } catch (IOException e) {
