@@ -15,7 +15,7 @@ public class WebServer {
 
     public static void main(String[] args) throws IOException {
         int port = DEFAULT_PORT;
-        ExecutorService service = Executors.newFixedThreadPool(DEFAULT_THREAD_NUM);
+        ExecutorService service = Executors.newFixedThreadPool(DEFAULT_THREAD_NUM);     // thread pool
 
         if (args.length != 0) {
             port = Integer.parseInt(args[0]);

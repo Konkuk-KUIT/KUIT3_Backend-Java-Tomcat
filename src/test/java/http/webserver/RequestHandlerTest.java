@@ -20,7 +20,7 @@ public class RequestHandlerTest {
 
     @Test
     void runTest() throws IOException {
-        // when TODO: 프린트가 아니라 직접 비교로 해봐 : 시간 있다면...
+        // when TODO: 프린트가 아니라 직접 비교로 해봐 : 시간 있다면... 모ㅋ키토 씀
         Socket socket = Mockito.mock(Socket.class);
         when(socket.getInetAddress()).thenReturn(null);
         when(socket.getPort()).thenReturn(1);
