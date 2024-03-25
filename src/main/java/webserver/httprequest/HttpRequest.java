@@ -10,6 +10,11 @@ public class HttpRequest {
 
     private BufferedReader br;
     private HttpRequestFirstLine httpRequestFirstLine;
+
+    public BufferedReader getBr() {
+        return br;
+    }
+
     private HttpRequestHeader httpRequestHeader;
 
     public HttpRequest(BufferedReader br) throws IOException {

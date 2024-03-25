@@ -25,22 +25,22 @@ public class HttpResponse {
         return new HttpResponse(dos);
     }
 
-    public void response200HeaderWithCss(DataOutputStream dos,int lengthOfBodyContent) {
+    public void response200HeaderWithCss() {
         try {
             dos.writeBytes("HTTP/1.1 200 OK \r\n");
             dos.writeBytes("Content-Type: text/css;charset=utf-8\r\n");
-            dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
+            dos.writeBytes("Content-Length: " + body.length + "\r\n");
             dos.writeBytes("\r\n");
             dos.flush();
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());
         }
     }
-    public void response200Header(DataOutputStream dos, int lengthOfBodyContent) {
+    public void response200Header() {
         try {
             dos.writeBytes("HTTP/1.1 200 OK \r\n");
             dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
-            dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
+            dos.writeBytes("Content-Length: " + body.length + "\r\n");
             dos.writeBytes("\r\n");
             dos.flush();
         } catch (IOException e) {
@@ -49,7 +49,7 @@ public class HttpResponse {
     }
 
     // 요구사항 4
-    public void response302Header(DataOutputStream dos, String url) {
+    public void response302Header(String url) {
         try {
             dos.writeBytes("HTTP/1.1 302 Redirect \r\n");
             dos.writeBytes("Location: " + url + "\r\n");
@@ -60,7 +60,11 @@ public class HttpResponse {
         }
     }
 
-    public void response302HeaderWithLogin(DataOutputStream dos, String url) {
+    public void setBody(byte[] body) {
+        this.body = body;
+    }
+
+    public void response302HeaderWithLogin(String url) {
         try {
             dos.writeBytes("HTTP/1.1 302 Redirect \r\n");
             dos.writeBytes("Location: " + url + "\r\n");
@@ -72,7 +76,7 @@ public class HttpResponse {
         }
     }
 
-    public void responseBody(DataOutputStream dos, byte[] body) {
+    public void responseBody() {
         try {
             dos.write(body, 0, body.length);
             dos.flush();
