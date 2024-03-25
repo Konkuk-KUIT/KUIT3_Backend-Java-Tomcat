@@ -4,6 +4,7 @@ import db.MemoryUserRepository;
 import db.Repository;
 import http.util.IOUtils;
 import model.User;
+import webserver.httprequest.HttpRequest;
 
 import java.io.*;
 import java.net.Socket;
@@ -13,6 +14,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import static http.util.HttpRequestUtils.parseQueryParameter;
+import static webserver.httprequest.UrlPath.*;
+import static webserver.httprequest.HttpMethod.*;
 
 public class RequestHandler implements Runnable{
     Socket connection;
@@ -31,53 +34,28 @@ public class RequestHandler implements Runnable{
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
             DataOutputStream dos = new DataOutputStream(out);
 
-            // input stream 확인
-            // ex)
-            // GET /index.html HTTP/1.1 이런 형식으로 올거임
-            String startLine = br.readLine();
-            String[] startLines = startLine.split(" ");
-            String method = startLines[0];
-            String url = startLines[1];
+            HttpRequest httpRequest = HttpRequest.from(br);
 
             byte[] body = new byte[0];
 
-            int requestContentLength = 0;
-            String cookie = "";
-
-
-            while (true) {
-                final String line = br.readLine();
-                if (line.equals("")) {
-                    break;
-                }
-                // header info
-                if (line.startsWith("Content-Length")) {
-                    requestContentLength = Integer.parseInt(line.split(": ")[1]);
-                }
-                if(line.startsWith("Cookie")){
-                    cookie = line.split(": ")[1];
-                    cookie = cookie.split(" ")[0];
-                }
-            }
-
             // 요구사항 1
             // / 이거나 index.html이면 바디에 해당 파일을 넘겨야함.
-            if(method.equals("GET") && url.equals("/index.html")){
-                body = Files.readAllBytes(Paths.get("./webapp" + url));
+            if(httpRequest.getMethod().equals(GET.getMethod()) && httpRequest.getUrl().equals(INDEX.getPath())){
+                body = Files.readAllBytes(Paths.get(ROOT.getPath() + INDEX.getPath()));
             }
 
-            if(url.equals("/")){
+            if(httpRequest.getUrl().equals("/")){
                 body = Files.readAllBytes(Paths.get("./webapp/index.html"));
             }
 
             // 요구사항 2
             //  SignUp 버튼을 클릭하면 /user/form.html 화면으로 이동
-            if(method.equals("GET") && url.equals("/user/form.html")){
-                body = Files.readAllBytes(Paths.get("./webapp" + url));
+            if(httpRequest.getUrl().equals(USER_FORM.getPath())){
+                body = Files.readAllBytes(Paths.get("./webapp" + USER_FORM.getPath()));
             }
             // /user/signup
-            if(method.equals("GET") && url.startsWith("/user/signup")){
-                String tmp = url.split("\\?")[1];
+            if(httpRequest.getMethod().equals(GET.getMethod()) &&httpRequest.getUrl().startsWith(USER_SIGNUP.getPath())){
+                String tmp = httpRequest.getUrl().split("\\?")[1];
                 Map<String,String> m = parseQueryParameter(tmp);
                 User user = new User(m.get("userId"), m.get("password"), m.get("name"), m.get("email"));
                 repository.addUser(user);
@@ -86,32 +64,32 @@ public class RequestHandler implements Runnable{
             }
 
             // 요구사항 3
-            if(method.equals("POST") && url.equals("/user/signup")){
-                String queryString = IOUtils.readData(br, requestContentLength);
+            if(httpRequest.getMethod().equals(POST.getMethod()) && httpRequest.getUrl().equals(USER_SIGNUP.getPath())){
+                log.info("check");
+                String queryString = IOUtils.readData(br, httpRequest.getContentLength());
                 Map<String,String> m = parseQueryParameter(queryString);
                 User user = new User(m.get("userId"), m.get("password"), m.get("name"), m.get("email"));
                 repository.addUser(user);
-                response302Header(dos,"/index.html");
+                response302Header(dos,INDEX.getPath());
                 return;
             }
 
 
             // 요구사항 5
-            if(method.equals("GET") && url.equals("/user/login.html")){
-                body = Files.readAllBytes(Paths.get("./webapp/user/login.html"));
+            if(httpRequest.getUrl().equals(USER_LOGIN_FILE.getPath())){
+                body = Files.readAllBytes(Paths.get(ROOT.getPath() + USER_LOGIN_FILE.getPath()));
             }
 
-            if(method.equals("POST") && url.equals("/user/login")){
-                String queryString = IOUtils.readData(br, requestContentLength);
+            if(httpRequest.getMethod().equals(POST.getMethod()) && httpRequest.getUrl().equals(USER_LOGIN.getPath())){
+                String queryString = IOUtils.readData(br, httpRequest.getContentLength());
                 Map<String,String> m = parseQueryParameter(queryString);
                 User user = repository.findUserById(m.get("userId"));
                 login(dos,m.get("password"),user);
             }
 
             // 요구사항 6 -> 문제점 현재 내 pc에서만의 문제인지 모르겠으나 쿠키 값이 여러개이고 ;으로 쿠키값이 끝난다
-            if(method.equals("GET") && url.equals("/user/userList")){
-                if(!(cookie.startsWith("logined=true"))){
-                    log.info(cookie);
+            if(httpRequest.getUrl().equals(USER_LIST.getPath())){
+                if(!(httpRequest.getCookie().startsWith("logined=true"))){
                     response302Header(dos,"/user/login.html");
                 }
                 body = Files.readAllBytes(Paths.get("./webapp/user/list.html"));
@@ -119,8 +97,8 @@ public class RequestHandler implements Runnable{
             }
 
             // 요구사항 7
-            if (method.equals("GET") && url.endsWith(".css")) {
-                body = Files.readAllBytes(Paths.get("./webapp" + url));
+            if (httpRequest.getUrl().endsWith(".css")) {
+                body = Files.readAllBytes(Paths.get("./webapp" + httpRequest.getUrl()));
                 response200HeaderWithCss(dos, body.length);
                 responseBody(dos, body);
                 return;
@@ -136,10 +114,10 @@ public class RequestHandler implements Runnable{
 
     private void login(DataOutputStream dos,String password, User user) {
         if (user != null && user.getPassword().equals(password)) {
-            response302HeaderWithLogin(dos,"/index.html");
+            response302HeaderWithLogin(dos,INDEX.getPath());
             return;
         }
-        response302Header(dos,"/login_failed.html");
+        response302Header(dos,LOGIN_FAILED.getPath());
     }
 
     // 요구사항 7
