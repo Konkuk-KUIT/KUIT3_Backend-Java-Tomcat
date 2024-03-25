@@ -1,7 +1,10 @@
 package service;
 
 import db.Repository;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import model.User;
 
 public class UserService {
@@ -15,5 +18,17 @@ public class UserService {
         User user = new User(signUpData.get("userId"), signUpData.get("password"), signUpData.get("name"),
                 signUpData.get("email"));
         repository.addUser(user);
+    }
+
+    public Optional<User> login(String id, String password) {
+        User user = repository.findUserById(id);
+        if(Objects.equals(user.getPassword(), password)) {
+            return Optional.of(user);
+        }
+        return Optional.empty();
+    }
+
+    public List<User> getAllUsers() {
+        return (List<User>) repository.findAll();
     }
 }
