@@ -27,11 +27,6 @@ public class RequestHandler implements Runnable{
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
             DataOutputStream dos = new DataOutputStream(out);
 
-            // Request header에서 Content-Length
-            // 클라이언트의 요청 메시지를 문자열 형태로 읽어들임 -> 경로에 넣음?
-            // var contentLength = 0;
-            // var message = readData(br, contentLength);
-
             // InputStream의 요청을 읽어와 파싱
             String startLine = br.readLine();
             // String readData = readData(br, startLine.length());
@@ -47,7 +42,7 @@ public class RequestHandler implements Runnable{
                 String indexUrl = "index.html";
                 url = baseUrl + indexUrl;
 
-                log.log(Level.INFO, "빈 값, 경로: " + url);
+//                log.log(Level.INFO, "빈 값, 경로: " + url);
             }
             // requestUrl이 존재하는 경우
             else {
@@ -55,13 +50,13 @@ public class RequestHandler implements Runnable{
                 if(noFile(url)) {
                     return;
                 }
-                log.log(Level.INFO, "빈 값 아님, 경로: " + url);
+//                log.log(Level.INFO, "빈 값 아님, 경로: " + url);
             }
 
             // 파일이 존재하면 파일 내용을 읽어옴
             byte[] body = Files.readAllBytes(Paths.get(url));
 
-            response200Header(dos, body.length);
+//            response200Header(dos, body.length);
             responseBody(dos, body);
 
         } catch (IOException e) {
@@ -92,11 +87,8 @@ public class RequestHandler implements Runnable{
     private boolean noFile(String url){
         // file이 존재하는지 확인
         File file = new File(url);
-        if (!file.exists()) {
-            // 파일이 존재하지 않으면 true 반환
-            return true;
-        }
-        return false;
+        // 파일이 존재하지 않으면 true 반환
+        return !file.exists();
     }
 
 }
