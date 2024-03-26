@@ -10,10 +10,6 @@ public class HttpRequestLine {
         this.path = line[1];
     }
 
-    public String getMethod() {
-        return method.getMethod();
-    }
-
     public String getPath() {
         return path;
     }
