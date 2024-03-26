@@ -9,18 +9,18 @@ public class HttpRequest {
     // body -> 클래스로 분리
 
     private BufferedReader br;
-    private HttpRequestFirstLine httpRequestFirstLine;
+    private HttpRequestLine httpRequestLine;
 
     public BufferedReader getBr() {
         return br;
     }
 
-    private HttpRequestHeader httpRequestHeader;
+    private HttpRequestHeaderLines httpRequestHeaderLines;
 
     public HttpRequest(BufferedReader br) throws IOException {
         this.br = br;
-        this.httpRequestFirstLine = new HttpRequestFirstLine(br.readLine());
-        this.httpRequestHeader = new HttpRequestHeader(br);
+        this.httpRequestLine = new HttpRequestLine(br.readLine());
+        this.httpRequestHeaderLines = new HttpRequestHeaderLines(br);
     }
 
     public static HttpRequest from(BufferedReader br) throws IOException{
@@ -28,19 +28,19 @@ public class HttpRequest {
     }
 
     public String getMethod(){
-        return httpRequestFirstLine.getMethod();
+        return httpRequestLine.getMethod();
     }
 
     public String getUrl(){
-        return httpRequestFirstLine.getPath();
+        return httpRequestLine.getPath();
     }
 
     public int getContentLength(){
-        return httpRequestHeader.getContentLength();
+        return httpRequestHeaderLines.getContentLength();
     }
 
     public String getCookie(){
-        return httpRequestHeader.getCookie();
+        return httpRequestHeaderLines.getCookie();
     }
 
 

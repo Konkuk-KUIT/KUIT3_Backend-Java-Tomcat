@@ -1,10 +1,10 @@
 package webserver.httprequest;
 
-public class HttpRequestFirstLine {
+public class HttpRequestLine {
     private HttpMethod method;
     private String path;
 
-    public HttpRequestFirstLine(String startLine) {
+    public HttpRequestLine(String startLine) {
         String[] line = startLine.split(" ");
         this.method = HttpMethod.valueOf(line[0]);
         this.path = line[1];

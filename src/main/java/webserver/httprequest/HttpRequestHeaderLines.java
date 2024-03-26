@@ -3,7 +3,7 @@ package webserver.httprequest;
 import java.io.BufferedReader;
 import java.io.IOException;
 
-public class HttpRequestHeader {
+public class HttpRequestHeaderLines {
     private int contentLength;
     private String cookie;
 
@@ -15,7 +15,7 @@ public class HttpRequestHeader {
         return cookie;
     }
 
-    public HttpRequestHeader(BufferedReader br) throws IOException {
+    public HttpRequestHeaderLines(BufferedReader br) throws IOException {
         while (true) {
             final String line = br.readLine();
             if (line.isEmpty()) {
