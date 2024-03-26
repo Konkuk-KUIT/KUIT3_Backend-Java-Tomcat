@@ -1,10 +1,15 @@
 package webserver;
 
+import http.util.HttpRequestUtils;
+import http.util.IOUtils;
+
 import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -23,8 +28,18 @@ public class RequestHandler implements Runnable{
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
             DataOutputStream dos = new DataOutputStream(out);
 
-            //File file=new File("index.html");
-            Path path = Paths.get("C:/Users/home/Desktop/2024_1학기/kuit/2주차/KUIT3_Backend-Java-Tomcat/webapp/index.html");
+            String line= IOUtils.readData(br,40);
+            String[] queryStrings = line.split(" ");
+            String url=queryStrings[1];
+
+            Path path=Paths.get("C:/Users/home/Desktop/2024_1학기/kuit/2주차/KUIT3_Backend-Java-Tomcat/webapp/index.html");;
+            if(Objects.equals(url, "/index.html")){
+                path=Paths.get("C:/Users/home/Desktop/2024_1학기/kuit/2주차/KUIT3_Backend-Java-Tomcat/webapp/index.html");
+            }
+            else if(Objects.equals(url, "/user/form.html")){
+                path=Paths.get("C:/Users/home/Desktop/2024_1학기/kuit/2주차/KUIT3_Backend-Java-Tomcat/webapp/user/form.html");
+            }
+
             byte[] body = Files.readAllBytes(path);
             response200Header(dos, body.length);
             responseBody(dos, body);
