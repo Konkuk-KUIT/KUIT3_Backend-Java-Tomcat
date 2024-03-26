@@ -40,57 +40,8 @@ public class RequestHandler implements Runnable{
             HttpResponse httpResponse = HttpResponse.from(dos);
 
 
-            // 요구사항 1
-            // / 이거나 index.html이면 바디에 해당 파일을 넘겨야함.
-            if(httpRequest.getMethod().equals(GET.getMethod()) && httpRequest.getUrl().equals(INDEX.getPath())){
-                controller = new ForwardController();
-            }
-
-            if(httpRequest.getUrl().equals("/")){
-                controller = new HomeController();
-            }
-
-            // 요구사항 2
-            //  SignUp 버튼을 클릭하면 /user/form.html 화면으로 이동
-            if(httpRequest.getUrl().equals(USER_FORM.getPath())){
-                controller = new UserFormController();
-            }
-            // /user/signup
-//            if(httpRequest.getMethod().equals(GET.getMethod()) &&httpRequest.getUrl().startsWith(USER_SIGNUP.getPath())){
-//                String tmp = httpRequest.getUrl().split("\\?")[1];
-//                Map<String,String> m = parseQueryParameter(tmp);
-//                User user = new User(m.get("userId"), m.get("password"), m.get("name"), m.get("email"));
-//                repository.addUser(user);
-//                httpResponse.response302Header(INDEX.getPath());
-//                return;
-//            }
-
-            // 요구사항 3
-            if(httpRequest.getMethod().equals(POST.getMethod()) && httpRequest.getUrl().equals(USER_SIGNUP.getPath())){
-                controller = new SignUpController();
-            }
-
-
-            // 요구사항 5
-            if(httpRequest.getUrl().equals(USER_LOGIN_FILE.getPath())){
-                controller = new LoginFormController();
-            }
-
-            if(httpRequest.getMethod().equals(POST.getMethod()) && httpRequest.getUrl().equals(USER_LOGIN.getPath())){
-                controller = new LoginController();
-            }
-
-            // 요구사항 6 -> 문제점 현재 내 pc에서만의 문제인지 모르겠으나 쿠키 값이 여러개이고 ;으로 쿠키값이 끝난다
-            if(httpRequest.getUrl().equals(USER_LIST.getPath())){
-                controller = new ListController();
-            }
-
-            // 요구사항 7
-            if (httpRequest.getUrl().endsWith(".css")) {
-                controller = new CssController();
-            }
-
-            controller.excute(httpRequest,httpResponse);
+            RequestMapper requestMapper = new RequestMapper(httpRequest,httpResponse);
+            requestMapper.proceed();
 
         } catch (IOException e) {
             log.log(Level.SEVERE,e.getMessage());

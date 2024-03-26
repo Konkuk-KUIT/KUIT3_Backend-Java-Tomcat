@@ -8,7 +8,8 @@ public enum UrlPath {
     USER_LOGIN("/user/login"),
     USER_LIST("/user/userList"),
     ROOT("./webapp"),
-    LOGIN_FAILED("/login_failed.html");
+    LOGIN_FAILED("/login_failed.html"),
+    CSS("/css/styles.css");
 
     private final String path;
 
