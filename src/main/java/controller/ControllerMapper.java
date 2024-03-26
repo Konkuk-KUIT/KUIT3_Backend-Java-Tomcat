@@ -20,6 +20,7 @@ public class ControllerMapper {
     private void init() {
         controllers.put("/", new HomeController());
         controllers.put("/index.html", new HomeController());
+        controllers.put("/user/signup", new SignUpController());
     }
 
     public Controller getController(HttpRequest httpRequest) {

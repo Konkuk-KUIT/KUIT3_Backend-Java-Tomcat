@@ -12,10 +12,15 @@ public class HttpResponse {
         this.body = body;
     }
 
-    public static HttpResponse ofHtmlFile(String path) {
+    public static HttpResponse of200HtmlFile(String path) {
         byte[] body = readFile(path);
-        byte[] header = getHttpResponseHeader(body.length);
+        byte[] header = get200HtmlResponseHeader(body.length);
         return new HttpResponse(header, body);
+    }
+
+    public static HttpResponse of302ResponseHeader(String path) {
+        byte[] header = get302ResponseHeader(path);
+        return new HttpResponse(header, new byte[0]);
     }
 
     public byte[] getHeader() {
@@ -39,9 +44,15 @@ public class HttpResponse {
         }
     }
 
-    private static byte[] getHttpResponseHeader(int contentLength) {    // html 파일일경우
+    private static byte[] get200HtmlResponseHeader(int contentLength) {    // html 파일일경우
         String header = "HTTP/1.1 200 OK \r\n" + "Content-Type: text/html;charset=utf-8\r\n" + "Content-Length: " +
                 contentLength + "\r\n" + "\r\n";
+        return header.getBytes();
+    }
+
+    private static byte[] get302ResponseHeader(String path) {
+        String header = "HTTP/1.1 302 OK \r\n" + "Location: " + path + "\r\n"
+                + "\r\n";
         return header.getBytes();
     }
 }
