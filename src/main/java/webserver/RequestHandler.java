@@ -30,7 +30,19 @@ public class RequestHandler implements Runnable{
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
             DataOutputStream dos = new DataOutputStream(out);
 
-            String headerInfo= IOUtils.readData(br,100);
+            String headerInfo= br.readLine();
+            int requestContentLength=0;
+            while (true) {
+                final String line = br.readLine();
+                if (line.equals("")) {
+                    break;
+                }
+                // header info
+                if (line.startsWith("Content-Length")) {
+                    requestContentLength = Integer.parseInt(line.split(": ")[1]);
+                }
+            }
+            String payload = IOUtils.readData(br, requestContentLength);
 
             String[] urlStrings = headerInfo.split(" ");
             String urlString=urlStrings[1];
@@ -56,10 +68,9 @@ public class RequestHandler implements Runnable{
             }
 
             else if(Objects.equals(url,"/user/signup")){
-                Map<String, String> map = HttpRequestUtils.parseQueryParameter(parameters[1]);
+                Map<String, String> map = HttpRequestUtils.parseQueryParameter(payload);
                 User user=new User(map.get("userId"),map.get("password"),map.get("name"),map.get("email"));
                 MemoryUserRepository.getInstance().addUser(user);
-
                 byte[] body = Files.readAllBytes(path);
                 response302Header(dos, "http://localhost:80/");
                 responseBody(dos, body);
