@@ -2,7 +2,6 @@ package webserver;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.logging.Level;
@@ -17,19 +16,25 @@ public class HttpResponse {
     private static final Logger log = Logger.getLogger(HttpResponse.class.getName());
     private final DataOutputStream dos;
 
-    public HttpResponse(OutputStream out) {
-        this.dos = new DataOutputStream(out);
+    byte[] body = new byte[0];
+
+    public HttpResponse(DataOutputStream dos) throws IOException {
+        this.dos = dos;
+    }
+
+    public void setBody(byte[] body) {
+        this.body = body;
     }
 
     public void forward(String path) {
         try {
-            byte[] body = Files.readAllBytes(Path.of(path));
+            body = Files.readAllBytes(Path.of(path));
             if (path.endsWith(".css")) {
-                response200HeaderWithCss(body.length);
+                response200HeaderWithCss();
             } else {
-                response200Header(body.length);
+                response200Header();
             }
-            responseBody(body);
+            responseBody();
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());
         }
@@ -38,22 +43,22 @@ public class HttpResponse {
         response302Header(path);
     }
 
-    public void response200Header(int lengthOfBodyContent) {
+    public void response200Header() {
         try {
             dos.writeBytes(OK.getStatusLine());
             dos.writeBytes(CONTENT_TYPE + ": text/html;charset=utf-8\r\n");
-            dos.writeBytes(CONTENT_LENGTH + ": " + lengthOfBodyContent + "\r\n");
+            dos.writeBytes(CONTENT_LENGTH + ": " + body.length + "\r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());
         }
     }
 
-    public void response200HeaderWithCss(int lengthOfBodyContent) {
+    public void response200HeaderWithCss() {
         try {
             dos.writeBytes(OK.getStatusLine());
             dos.writeBytes(CONTENT_TYPE + ": text/css;charset=utf-8\r\n");
-            dos.writeBytes(CONTENT_LENGTH + ": " + lengthOfBodyContent + "\r\n");
+            dos.writeBytes(CONTENT_LENGTH + ": " + body.length + "\r\n");
             dos.writeBytes("\r\n");
             dos.flush();
         } catch (IOException e) {
@@ -84,7 +89,7 @@ public class HttpResponse {
         }
     }
 
-    public void responseBody(byte[] body) {
+    public void responseBody() {
         try {
             dos.write(body, 0, body.length);
             dos.flush();

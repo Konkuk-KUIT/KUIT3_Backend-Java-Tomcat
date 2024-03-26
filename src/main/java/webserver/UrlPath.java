@@ -22,7 +22,7 @@ public enum UrlPath {
     public String getPath() {
         return path;
     }
-    // 동적으로 결정되는 homePath를 반환하는 메소드
+
     public static Path getHomePath() {
         return Paths.get(ROOT.getPath() + INDEX.getPath());
     }
