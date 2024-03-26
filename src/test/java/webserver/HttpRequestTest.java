@@ -1,7 +1,8 @@
-package http.util;
+package webserver;
 
+import http.util.IOUtils;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import webserver.HttpRequest;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -21,7 +22,7 @@ public class HttpRequestTest {
     public void httpRequestFromFileTest() throws IOException {
         //given
         String testDirectory = "src/test/resources/";
-        String testFile = "request.txt"; // 테스트할 파일 이름
+        String testFile = "request.txt";
 
         //when
         BufferedReader br = bufferedReaderFromFile(testDirectory + testFile);
@@ -31,6 +32,6 @@ public class HttpRequestTest {
         assertEquals("/user/create", httpRequest.getPath());
         assertEquals("POST", httpRequest.getMethod());
         assertEquals(40, httpRequest.getContentLength());
-        assertEquals("userId=jw&password=password&name=jungwoo", IOUtils.readData(br, httpRequest.getContentLength()));
+        Assertions.assertEquals("userId=jw&password=password&name=jungwoo", IOUtils.readData(br, httpRequest.getContentLength()));
     }
 }

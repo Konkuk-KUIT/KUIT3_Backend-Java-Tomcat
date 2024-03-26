@@ -7,7 +7,7 @@ public class HttpRequest {
     private String method;
     private String path;
     private int contentLength = 0;
-    private String cookie;
+    private String cookie = "";
     private HttpRequest() {
     }
 
