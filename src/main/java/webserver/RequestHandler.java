@@ -32,14 +32,20 @@ public class RequestHandler implements Runnable{
 
             String headerInfo= br.readLine();
             int requestContentLength=0;
+            String cookie=null;
+            System.out.println("headerInfo = " + headerInfo);
             while (true) {
                 final String line = br.readLine();
+                System.out.println("line = " + line);
                 if (line.equals("")) {
                     break;
                 }
                 // header info
                 if (line.startsWith("Content-Length")) {
                     requestContentLength = Integer.parseInt(line.split(": ")[1]);
+                }
+                if(line.startsWith("Cookie")){
+                    cookie = (line.split(": ")[1]);
                 }
             }
             String payload = IOUtils.readData(br, requestContentLength);
@@ -96,7 +102,22 @@ public class RequestHandler implements Runnable{
                 byte[] body = Files.readAllBytes(path);
                 response200Header(dos, body.length);
                 responseBody(dos, body);
+            }
+            else if(Objects.equals(url,"/user/userList")){
+                if(cookie.equals("logined=true")){
+                    path=Paths.get("C:/Users/home/Desktop/2024_1학기/kuit/2주차/KUIT3_Backend-Java-Tomcat/webapp/user/list.html");
 
+                    byte[] body = Files.readAllBytes(path);
+                    response200Header(dos, body.length);
+                    responseBody(dos, body);
+                }
+                else{
+                    path=Paths.get("C:/Users/home/Desktop/2024_1학기/kuit/2주차/KUIT3_Backend-Java-Tomcat/webapp/user/login.html");
+
+                    byte[] body = Files.readAllBytes(path);
+                    response200Header(dos, body.length);
+                    responseBody(dos, body);
+                }
             }
 
         } catch (IOException e) {
@@ -128,7 +149,7 @@ public class RequestHandler implements Runnable{
         try {
             dos.writeBytes("HTTP/1.1 302 Found \r\n");
             dos.writeBytes("Location: " +path  + "\r\n");
-            dos.writeBytes("Set-Cookies: logined=true \r\n");
+            dos.writeBytes("Set-Cookie: logined=true \r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());
