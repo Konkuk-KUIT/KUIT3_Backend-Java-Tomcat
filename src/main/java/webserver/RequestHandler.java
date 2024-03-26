@@ -57,8 +57,15 @@ public class RequestHandler implements Runnable{
             String url=parameters[0];
 
             Path path=Paths.get("C:/Users/home/Desktop/2024_1학기/kuit/2주차/KUIT3_Backend-Java-Tomcat/webapp/index.html");;
-            
-            if(Objects.equals(url, "/index.html")||Objects.equals(url, "/")){
+            if(url.endsWith(".css")){
+                path=Paths.get("C:/Users/home/Desktop/2024_1학기/kuit/2주차/KUIT3_Backend-Java-Tomcat/webapp"+url);
+
+                byte[] body = Files.readAllBytes(path);
+                response200HeaderWithCss(dos, body.length);
+                responseBody(dos, body);
+
+            }
+            else if(Objects.equals(url, "/index.html")||Objects.equals(url, "/")){
                 path=Paths.get("C:/Users/home/Desktop/2024_1학기/kuit/2주차/KUIT3_Backend-Java-Tomcat/webapp/index.html");
 
                 byte[] body = Files.readAllBytes(path);
@@ -104,27 +111,46 @@ public class RequestHandler implements Runnable{
                 responseBody(dos, body);
             }
             else if(Objects.equals(url,"/user/userList")){
-                if(cookie.equals("logined=true")){
-                    path=Paths.get("C:/Users/home/Desktop/2024_1학기/kuit/2주차/KUIT3_Backend-Java-Tomcat/webapp/user/list.html");
+                try{
+                    if(cookie.equals("logined=true")){
+                        path=Paths.get("C:/Users/home/Desktop/2024_1학기/kuit/2주차/KUIT3_Backend-Java-Tomcat/webapp/user/list.html");
 
-                    byte[] body = Files.readAllBytes(path);
-                    response200Header(dos, body.length);
-                    responseBody(dos, body);
+                        byte[] body = Files.readAllBytes(path);
+                        response200Header(dos, body.length);
+                        responseBody(dos, body);
+                    }
+                    else{
+                        path=Paths.get("C:/Users/home/Desktop/2024_1학기/kuit/2주차/KUIT3_Backend-Java-Tomcat/webapp/user/login.html");
+
+                        byte[] body = Files.readAllBytes(path);
+                        response200Header(dos, body.length);
+                        responseBody(dos, body);
+                    }
                 }
-                else{
+                catch (NullPointerException e){
                     path=Paths.get("C:/Users/home/Desktop/2024_1학기/kuit/2주차/KUIT3_Backend-Java-Tomcat/webapp/user/login.html");
 
                     byte[] body = Files.readAllBytes(path);
                     response200Header(dos, body.length);
                     responseBody(dos, body);
                 }
+
             }
 
         } catch (IOException e) {
             log.log(Level.SEVERE,e.getMessage());
         }
     }
-
+    private void response200HeaderWithCss(DataOutputStream dos, int lengthOfBodyContent) {
+        try {
+            dos.writeBytes("HTTP/1.1 200 OK \r\n");
+            dos.writeBytes("Content-Type: text/css;charset=utf-8\r\n");
+            dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
+            dos.writeBytes("\r\n");
+        } catch (IOException e) {
+            log.log(Level.SEVERE, e.getMessage());
+        }
+    }
     private void response200Header(DataOutputStream dos, int lengthOfBodyContent) {
         try {
             dos.writeBytes("HTTP/1.1 200 OK \r\n");
