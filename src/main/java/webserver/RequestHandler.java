@@ -6,10 +6,8 @@ import http.HttpRequest;
 import http.HttpResponse;
 import java.io.*;
 import java.net.Socket;
-import java.nio.channels.IllegalBlockingModeException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import structure.StartLine;
 
 public class RequestHandler implements Runnable{    // Ran By Thread
     Socket connection;
@@ -27,12 +25,8 @@ public class RequestHandler implements Runnable{    // Ran By Thread
             BufferedReader br = new BufferedReader(new InputStreamReader(in));  // 데이터 냠냠
             DataOutputStream dos = new DataOutputStream(out);   // 보낼 출구 뚫기
 
-            System.out.println("DDD");
 
             HttpRequest httpRequest = new HttpRequest(br);
-
-            System.out.println(httpRequest);
-            System.out.println("HEY");
 
             Controller controller = controllerMapper.getController(httpRequest);
 
@@ -77,9 +71,9 @@ public class RequestHandler implements Runnable{    // Ran By Thread
 
     private void sendHttpResponse(DataOutputStream dos, HttpResponse httpResponse) {
         try {
-            System.out.println("SENT");
-            dos.write(httpResponse.getResponse());
-            dos.write(httpResponse.getBody());
+            dos.write(httpResponse.getHeader());
+            dos.write(httpResponse.getBody(), 0, httpResponse.getBodyLength());
+            dos.flush();
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());
         }

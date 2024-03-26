@@ -7,6 +7,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -33,5 +34,11 @@ public class RequestHandlerTest {
         requestHandler.run();
         System.out.println(dos);
 
+    }
+
+    @Test
+    void mapTest() {
+        String str = "sdfsdf sdfs";
+        String[] ss = str.split("-");
     }
 }

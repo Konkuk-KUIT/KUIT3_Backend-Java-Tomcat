@@ -1,12 +1,8 @@
 package controller;
 
 import http.HttpRequest;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import structure.StartLine;
 
 public class ControllerMapper {
 
@@ -24,12 +20,9 @@ public class ControllerMapper {
     private void init() {
         controllers.put("/", new HomeController());
         controllers.put("/index.html", new HomeController());
-        System.out.println("initialized");
     }
 
     public Controller getController(HttpRequest httpRequest) {
-        System.out.println(httpRequest);
-        System.out.println("controller sent");
         return controllers.get(httpRequest.parsePath());   // 여기서 exception 터지면 그 path에 상응하는 Controller가 없다느 거
     }
 

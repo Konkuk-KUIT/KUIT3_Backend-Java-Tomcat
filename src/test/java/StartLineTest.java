@@ -1,5 +1,5 @@
 import org.junit.jupiter.api.Test;
-import structure.StartLine;
+import structure.RequestStartLine;
 
 public class StartLineTest {
 
@@ -7,7 +7,7 @@ public class StartLineTest {
     void parsingTest() {
         String line = "POST /index.html?a=1&b=2 HTTP/1.1";
 
-        StartLine startLine = new StartLine(line);
+        RequestStartLine startLine = new RequestStartLine(line);
 
         System.out.println(startLine.toString());
     }
