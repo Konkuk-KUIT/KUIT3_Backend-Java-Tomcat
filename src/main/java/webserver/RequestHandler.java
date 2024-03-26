@@ -1,20 +1,29 @@
 package webserver;
 
+import db.MemoryUserRepository;
+import model.User;
+
 import java.io.*;
+import java.lang.reflect.Array;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static http.util.IOUtils.readData;
+import static db.MemoryUserRepository.getInstance;
+import static http.util.HttpRequestUtils.parseQueryParameter;
 
 public class RequestHandler implements Runnable{
     Socket connection;
     private static final Logger log = Logger.getLogger(RequestHandler.class.getName());
+    private static final String BASE_URL = "./webapp";
+    private static final String HOME_URL = "/index.html";
 
     public RequestHandler(Socket connection) {
         this.connection = connection;
@@ -27,36 +36,80 @@ public class RequestHandler implements Runnable{
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
             DataOutputStream dos = new DataOutputStream(out);
 
-            // InputStream의 요청을 읽어와 파싱
+            byte[] body = new byte[0];
+            int requestContentLength = 0;
+
+            // InputStream에서 요청을 읽어와 StartLine 파싱
             String startLine = br.readLine();
-            // String readData = readData(br, startLine.length());
             String[] startLines = startLine.split(" ");
-            // String requestMethod = startLines[0];
+            String requestMethod = startLines[0];
             String requestUrl = startLines[1];
 
-            String baseUrl = "/Users/seohyun/Desktop/Dev/KUIT3-Backend/KUIT3_Backend-Java-Tomcat/webapp/";
-            String url = "";
-
-            // requestUrl이 빈 값인 경우
-            if(Objects.equals(requestUrl, "/")) {
-                String indexUrl = "index.html";
-                url = baseUrl + indexUrl;
-
-//                log.log(Level.INFO, "빈 값, 경로: " + url);
-            }
-            // requestUrl이 존재하는 경우
-            else {
-                url = baseUrl + requestUrl;
-                if(noFile(url)) {
-                    return;
+            // Header 파싱
+            while (true) {
+                final String line = br.readLine();
+                // blank line 만나면 requestBody 시작되므로 break
+                if (line.equals("")) {
+                    break;
                 }
-//                log.log(Level.INFO, "빈 값 아님, 경로: " + url);
+
+                if (line.startsWith("Content-Length")) {
+                    requestContentLength = Integer.parseInt(line.split(": ")[1]);
+                }
             }
 
-            // 파일이 존재하면 파일 내용을 읽어옴
-            byte[] body = Files.readAllBytes(Paths.get(url));
+            // 1 기본값(홈) url 설정
+            if (requestMethod.equals("GET") && requestUrl.equals("/")) {
+                body = Files.readAllBytes(Paths.get(BASE_URL + HOME_URL));
+            }
 
-//            response200Header(dos, body.length);
+            // 1 .html로 끝나는 url의 경우
+            if (requestMethod.equals("GET") && requestUrl.endsWith(".html")) {
+                body = Files.readAllBytes(Paths.get(BASE_URL + requestUrl));
+            }
+
+            // 2 GET 방식으로 회원가입
+            if (requestMethod.equals("GET") && requestUrl.startsWith("/user/signup?")) {
+                // 쿼리 스트링 기준으로 파싱
+                String[] parsedUrl = requestUrl.split("[?]");
+                Map<String, String> queryStringMap = parseQueryParameter(parsedUrl[1]);
+
+                // URL 인코딩된 값을 디코딩
+                for (Map.Entry<String, String> entry : queryStringMap.entrySet()){
+                    try {
+                        String key = entry.getKey();
+                        // 디코딩
+                        String decodedValue = java.net.URLDecoder.decode(entry.getValue(),"UTF-8");
+                        queryStringMap.put(key, decodedValue);
+                    } catch (java.io.UnsupportedEncodingException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                String userId = queryStringMap.get("userId");
+                String name = queryStringMap.get("name");
+                String password = queryStringMap.get("password");
+                String email = queryStringMap.get("email");
+
+                User user = new User(userId, password, name, email);
+                System.out.println(userId+name+password+email);
+
+                // MemoryUserRepository 객체에 User 저장 및 확인
+                MemoryUserRepository userRepository = getInstance();
+                userRepository.addUser(user);
+
+                Collection<User> allUsers = userRepository.findAll();
+                for (User storedUser: allUsers) {
+                    System.out.println("userId: " + storedUser.getUserId());
+                    System.out.println("name: " + storedUser.getName());
+                    System.out.println("password: " + storedUser.getPassword());
+                    System.out.println("email: " + storedUser.getEmail());
+                    System.out.println();
+                }
+
+            }
+
+            response200Header(dos, body.length);
             responseBody(dos, body);
 
         } catch (IOException e) {
@@ -84,11 +137,5 @@ public class RequestHandler implements Runnable{
         }
     }
 
-    private boolean noFile(String url){
-        // file이 존재하는지 확인
-        File file = new File(url);
-        // 파일이 존재하지 않으면 true 반환
-        return !file.exists();
-    }
 
 }
