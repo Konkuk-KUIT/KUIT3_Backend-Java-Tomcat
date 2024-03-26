@@ -4,15 +4,11 @@ import db.MemoryUserRepository;
 import model.User;
 
 import java.io.*;
-import java.lang.reflect.Array;
 import java.net.Socket;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -55,9 +51,11 @@ public class RequestHandler implements Runnable{
                 if (line.equals("")) {
                     break;
                 }
-
                 if (line.startsWith("Content-Length")) {
                     requestContentLength = Integer.parseInt(line.split(": ")[1]);
+                }
+                if (line.startsWith("Cookie")) {
+
                 }
             }
 
@@ -110,7 +108,7 @@ public class RequestHandler implements Runnable{
                 response302Header(dos, "/");
             }
 
-            // 3) POST 방식으로 회원가입
+            // 3) POST 방식으로 회원가입 + 4) 302 status code 적용
             if (requestMethod.equals("POST") && requestUrl.equals("/user/signup")) {
                 String requestBody = readData(br, requestContentLength);
                 Map<String, String> queryStringMap = parseQueryParameter(requestBody);
@@ -149,6 +147,8 @@ public class RequestHandler implements Runnable{
                 response302Header(dos, "/");
             }
 
+            //
+
             response200Header(dos, body.length);
             responseBody(dos, body);
 
@@ -178,6 +178,17 @@ public class RequestHandler implements Runnable{
         }
     }
 
+    private void response302HeaderWithCookie(DataOutputStream dos, String path, String cookie) {
+        try {
+            dos.writeBytes("HTTP/1.1 302 Found \r\n");
+            dos.writeBytes("Location: " + path + "\r\n");
+            dos.writeBytes("Cookie: " + cookie + "\r\n");
+            dos.writeBytes("\r\n");
+        } catch (IOException e) {
+            log.log(Level.SEVERE, e.getMessage());
+        }
+    }
+
     private void responseBody(DataOutputStream dos, byte[] body) {
         try {
             dos.write(body, 0, body.length);
@@ -186,6 +197,7 @@ public class RequestHandler implements Runnable{
             log.log(Level.SEVERE, e.getMessage());
         }
     }
+
 
 
 }
