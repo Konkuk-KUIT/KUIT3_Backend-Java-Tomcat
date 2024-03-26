@@ -2,6 +2,9 @@ package webserver;
 
 import java.io.*;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,7 +23,9 @@ public class RequestHandler implements Runnable{
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
             DataOutputStream dos = new DataOutputStream(out);
 
-            byte[] body = "Hello World".getBytes();
+            //File file=new File("index.html");
+            Path path = Paths.get("C:/Users/home/Desktop/2024_1학기/kuit/2주차/KUIT3_Backend-Java-Tomcat/webapp/index.html");
+            byte[] body = Files.readAllBytes(path);
             response200Header(dos, body.length);
             responseBody(dos, body);
 
