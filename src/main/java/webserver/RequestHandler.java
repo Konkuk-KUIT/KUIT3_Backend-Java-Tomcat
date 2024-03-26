@@ -8,7 +8,6 @@ import model.User;
 import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -72,6 +71,46 @@ public class RequestHandler implements Runnable {
                 userRepository.addUser(new User(elements.get("userId"), elements.get("password"), elements.get("name"), elements.get("email")));
                 // for redirect
                 response302Header(dos, "/index.html");
+                return;
+            }
+            if (url.equals("/user/login.html")) {
+                // user/login.html 반환
+                byte[] body = Files.readAllBytes(new File("webapp/user/login.html").toPath());
+                response200Header(dos, body.length);
+                responseBody(dos, body);
+                return;
+            }
+            if (url.equals("/user/login_failed.html")) {
+                // user/login_failed.html 반환
+                byte[] body = Files.readAllBytes(new File("webapp/user/login_failed.html").toPath());
+                response200Header(dos, body.length);
+                responseBody(dos, body);
+                return;
+            }
+            if (url.startsWith("/user/login") && method.equals("POST")) {
+                // Content-Length 가져오고, BufferedReader offset 을 request message (http) body 입구에 위치
+                int requestContentLength = 0;
+                String line = "";
+                while (!(line = br.readLine()).isEmpty()) {
+                    if (line.startsWith("Content-Length")) {
+                        requestContentLength = Integer.parseInt(line.split(": ")[1]);
+                    }
+                }
+
+                Map<String, String> elements = HttpRequestUtils.parseQueryParameter(IOUtils.readData(br, requestContentLength));
+                MemoryUserRepository userRepository = MemoryUserRepository.getInstance();
+                try {
+                    User user = userRepository.findUserById(elements.get("userId"));
+                    // 비밀번호가 틀린 경우
+                    if (!user.getPassword().equals(elements.get("password"))) {
+                        response302Header(dos, "/user/login_failed.html");
+                        return;
+                    }
+                    response302HeaderWithCookie(dos, "/index.html");
+                } catch (NullPointerException e) {
+                    // 해당 아이디가 없는 경우
+                    response302Header(dos, "/user/login_failed.html");
+                }
             }
 
         } catch (IOException e) {
@@ -99,10 +138,21 @@ public class RequestHandler implements Runnable {
         }
     }
 
+    // for redirect
     private void response302Header(DataOutputStream dos, String path) {
         try {
             dos.writeBytes("HTTP/1.1 302 Found \r\n");
-            dos.writeBytes(String.format("Location: %s\r\n", path));
+            dos.writeBytes("Location: " + path + "\r\n");
+        } catch (IOException e) {
+            log.log(Level.SEVERE, e.getMessage());
+        }
+    }
+
+    private void response302HeaderWithCookie(DataOutputStream dos, String path) {
+        try {
+            dos.writeBytes("HTTP/1.1 302 Found \r\n");
+            dos.writeBytes("Location: " + path + "\r\n");
+            dos.writeBytes("Set-Cookie: logined=true\r\n");
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());
         }
