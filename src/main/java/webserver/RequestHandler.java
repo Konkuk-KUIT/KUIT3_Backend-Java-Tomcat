@@ -16,8 +16,7 @@ import java.util.logging.Logger;
 
 import static http.util.HttpRequestUtils.parseQueryParameter;
 import static webserver.HttpHeader.*;
-import static webserver.HttpMethod.GET;
-import static webserver.HttpMethod.POST;
+import static webserver.HttpMethod.*;
 import static webserver.UrlPath.*;
 import static webserver.UserQueryKey.*;
 
@@ -40,35 +39,13 @@ public class RequestHandler implements Runnable{
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
             DataOutputStream dos = new DataOutputStream(out);
 
+            HttpRequest httpRequest = HttpRequest.from(br);
+            String url = httpRequest.getPath();
+            String method = httpRequest.getMethod();
             byte[] body = new byte[0];
 
-            String startLine = br.readLine();
-            String[] startLines = startLine.split(" ");
-            HttpMethod method = HttpMethod.valueOf(startLines[0]);;
-            String url = startLines[1];
-
-
-            int requestContentLength = 0;
-            String cookie = "";
-
-
-            while (true) {
-                final String line = br.readLine();
-                if (line.equals("")) {
-                    break;
-                }
-                // header info
-                if (line.startsWith("Content-Length")) {
-                    requestContentLength = Integer.parseInt(line.split(": ")[1]);
-                    System.out.println("request : "+requestContentLength);
-                }
-
-                if (line.startsWith("Cookie")) {
-                    cookie = line.split(": ")[1];
-                }
-            }
             // 요구 사항 1
-            if (method == GET && url.endsWith(".html")) {
+            if (httpRequest.getMethod().equals(GET.getMethod()) && httpRequest.getPath().equals(INDEX.getPath())) {
                 Path path = Paths.get(ROOT.getPath() + url);
                 body = Files.readAllBytes(path);
             }
@@ -77,11 +54,11 @@ public class RequestHandler implements Runnable{
                 body = Files.readAllBytes(getHomePath());
             }
             //요구 사항 2
-            if(method.equals(GET) && url.equals("/user/form.html")){
+            if(method.equals(GET.getMethod()) && url.equals(USER_FORM.getPath())){
                 Path path = Paths.get(ROOT.getPath() + url);
                 body = Files.readAllBytes(path);
             }
-            if(method.equals(GET) && url.startsWith("/user/signup")){
+            if(method.equals(GET.getMethod()) && url.startsWith(SIGNUP.getPath())){
                 String UserInfo = url.split("\\?")[1];
                 Map<String,String> queryParameter = parseQueryParameter(UserInfo);
                 String userId = queryParameter.get(USER_ID.getKey());
@@ -93,8 +70,8 @@ public class RequestHandler implements Runnable{
                 response302Header(dos, INDEX.getPath());
             }
             //요구 사항 3
-            if(method.equals(POST) && url.equals("/user/signup")){
-                String queryString = IOUtils.readData(br, requestContentLength);
+            if(method.equals(POST.getMethod()) && url.equals(SIGNUP.getPath())){
+                String queryString = IOUtils.readData(br, httpRequest.getContentLength());
                 Map<String, String> queryParameter = parseQueryParameter(queryString);
                 String userId = queryParameter.get(USER_ID.getKey());
                 String password = queryParameter.get(PASSWORD.getKey());
@@ -106,7 +83,7 @@ public class RequestHandler implements Runnable{
             }
             //요구 사항 5
             if (url.equals("/user/login")) {
-                String queryString = IOUtils.readData(br, requestContentLength);
+                String queryString = IOUtils.readData(br, httpRequest.getContentLength());
                 Map<String, String> queryParameter = parseQueryParameter(queryString);
                 String userId = queryParameter.get(USER_ID.getKey());
                 User user = repository.findUserById(userId);
@@ -116,7 +93,7 @@ public class RequestHandler implements Runnable{
 
             // 요구 사항 6
             if (url.equals("/user/userList")) {
-                if (!cookie.equals("logined=true")) {
+                if (!httpRequest.getCookie().equals("logined=true")) {
                     response302Header(dos,LOGIN.getPath());
                     return;
                 }
@@ -124,7 +101,7 @@ public class RequestHandler implements Runnable{
             }
 
             // 요구 사항 7번
-            if (method.equals(GET) && url.endsWith(".css")) {
+            if (method.equals(GET.getMethod()) && url.endsWith(".css")) {
                 body = Files.readAllBytes(Paths.get(ROOT.getPath() + url));
                 response200HeaderWithCss(dos, body.length);
                 responseBody(dos, body);
@@ -132,7 +109,7 @@ public class RequestHandler implements Runnable{
             }
 
             // image
-            if (method.equals(GET) && url.endsWith(".jpeg")) {
+            if (method.equals(GET.getMethod()) && url.endsWith(".jpeg")) {
                 body = Files.readAllBytes(Paths.get(ROOT.getPath() + url));
                 response200Header(dos, body.length);
                 responseBody(dos, body);
@@ -157,8 +134,8 @@ public class RequestHandler implements Runnable{
     private void response200Header(DataOutputStream dos, int lengthOfBodyContent) {
         try {
             dos.writeBytes("HTTP/1.1 200 OK \r\n");
-            dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
-            dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
+            dos.writeBytes(CONTENT_TYPE.getHeader() + ": text/html;charset=utf-8\r\n");
+            dos.writeBytes(CONTENT_LENGTH.getHeader() + ": " + lengthOfBodyContent + "\r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());

@@ -1,5 +1,16 @@
 package webserver;
 
 public enum HttpMethod {
-    GET,POST;
+    GET("GET"),
+    POST("POST");
+
+
+    final String method;
+
+    HttpMethod(String method) {
+        this.method = method;
+    }
+    public String getMethod() {
+        return method;
+    }
 }
