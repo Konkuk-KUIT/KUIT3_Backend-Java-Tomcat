@@ -18,6 +18,7 @@ import java.util.logging.Logger;
 
 import static db.MemoryUserRepository.getInstance;
 import static http.util.HttpRequestUtils.parseQueryParameter;
+import static http.util.IOUtils.readData;
 
 public class RequestHandler implements Runnable{
     Socket connection;
@@ -76,6 +77,45 @@ public class RequestHandler implements Runnable{
                 String[] parsedUrl = requestUrl.split("[?]");
                 Map<String, String> queryStringMap = parseQueryParameter(parsedUrl[1]);
 
+                // URL 인코딩된 값을 디코딩
+                for (Map.Entry<String, String> entry : queryStringMap.entrySet()){
+                    try {
+                        String key = entry.getKey();
+                        // 디코딩
+                        String decodedValue = java.net.URLDecoder.decode(entry.getValue(),"UTF-8");
+                        queryStringMap.put(key, decodedValue);
+                    } catch (java.io.UnsupportedEncodingException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                String userId = queryStringMap.get("userId");
+                String name = queryStringMap.get("name");
+                String password = queryStringMap.get("password");
+                String email = queryStringMap.get("email");
+
+                // MemoryUserRepository 객체에 User 저장 및 확인
+                User user = new User(userId, password, name, email);
+                userRepository.addUser(user);
+
+                Collection<User> allUsers = userRepository.findAll();
+                for (User storedUser: allUsers) {
+                    System.out.println("userId: " + storedUser.getUserId());
+                    System.out.println("name: " + storedUser.getName());
+                    System.out.println("password: " + storedUser.getPassword());
+                    System.out.println("email: " + storedUser.getEmail());
+                    System.out.println();
+                }
+
+                response302Header(dos, "/");
+            }
+
+            // 3) POST 방식으로 회원가입
+            if (requestMethod.equals("POST") && requestUrl.equals("/user/signup")) {
+                String requestBody = readData(br, requestContentLength);
+                Map<String, String> queryStringMap = parseQueryParameter(requestBody);
+
+                // 2번이랑 동일 -> 리팩토링할 때 함수로 빼기
                 // URL 인코딩된 값을 디코딩
                 for (Map.Entry<String, String> entry : queryStringMap.entrySet()){
                     try {
