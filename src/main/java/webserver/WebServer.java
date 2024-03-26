@@ -21,10 +21,10 @@ public class WebServer {
             port = Integer.parseInt(args[0]);
         }
 
-        // TCP 환영 소켓
+        // 1. TCP 환영 소켓 (서버 소켓)
         try (ServerSocket welcomeSocket = new ServerSocket(port)){
 
-            // 연결 소켓
+            // 2. 연결 소켓 (클라이언트 접속 대기)
             Socket connection;
             while ((connection = welcomeSocket.accept()) != null) {
                 // 스레드에 작업 전달
