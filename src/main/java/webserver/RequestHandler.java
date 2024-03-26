@@ -1,7 +1,9 @@
 package webserver;
 
+import db.MemoryUserRepository;
 import http.util.HttpRequestUtils;
 import http.util.IOUtils;
+import model.User;
 
 import java.io.*;
 import java.net.Socket;
@@ -28,21 +30,41 @@ public class RequestHandler implements Runnable{
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
             DataOutputStream dos = new DataOutputStream(out);
 
-            String line= IOUtils.readData(br,40);
-            String[] queryStrings = line.split(" ");
-            String url=queryStrings[1];
+            String headerInfo= IOUtils.readData(br,100);
+
+            String[] urlStrings = headerInfo.split(" ");
+            String urlString=urlStrings[1];
+
+            String[] parameters = urlString.split("\\?");
+            String url=parameters[0];
 
             Path path=Paths.get("C:/Users/home/Desktop/2024_1학기/kuit/2주차/KUIT3_Backend-Java-Tomcat/webapp/index.html");;
-            if(Objects.equals(url, "/index.html")){
+            
+            if(Objects.equals(url, "/index.html")||Objects.equals(url, "/")){
                 path=Paths.get("C:/Users/home/Desktop/2024_1학기/kuit/2주차/KUIT3_Backend-Java-Tomcat/webapp/index.html");
+
+                byte[] body = Files.readAllBytes(path);
+                response200Header(dos, body.length);
+                responseBody(dos, body);
             }
             else if(Objects.equals(url, "/user/form.html")){
                 path=Paths.get("C:/Users/home/Desktop/2024_1학기/kuit/2주차/KUIT3_Backend-Java-Tomcat/webapp/user/form.html");
+
+                byte[] body = Files.readAllBytes(path);
+                response200Header(dos, body.length);
+                responseBody(dos, body);
             }
 
-            byte[] body = Files.readAllBytes(path);
-            response200Header(dos, body.length);
-            responseBody(dos, body);
+            else if(Objects.equals(url,"/user/signup")){
+                Map<String, String> map = HttpRequestUtils.parseQueryParameter(parameters[1]);
+                User user=new User(map.get("userId"),map.get("password"),map.get("name"),map.get("email"));
+                MemoryUserRepository.getInstance().addUser(user);
+
+                byte[] body = Files.readAllBytes(path);
+                response302Header(dos, "http://localhost:80/");
+                responseBody(dos, body);
+
+            }
 
         } catch (IOException e) {
             log.log(Level.SEVERE,e.getMessage());
@@ -59,7 +81,15 @@ public class RequestHandler implements Runnable{
             log.log(Level.SEVERE, e.getMessage());
         }
     }
-
+    private void response302Header(DataOutputStream dos, String path) {
+        try {
+            dos.writeBytes("HTTP/1.1 302 Found \r\n");
+            dos.writeBytes("Location: " +path  + "\r\n");
+            dos.writeBytes("\r\n");
+        } catch (IOException e) {
+            log.log(Level.SEVERE, e.getMessage());
+        }
+    }
     private void responseBody(DataOutputStream dos, byte[] body) {
         try {
             dos.write(body, 0, body.length);
