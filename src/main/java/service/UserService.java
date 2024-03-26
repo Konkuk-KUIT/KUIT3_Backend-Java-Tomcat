@@ -20,9 +20,9 @@ public class UserService {
         repository.addUser(user);
     }
 
-    public Optional<User> login(String id, String password) {
-        User user = repository.findUserById(id);
-        if(Objects.equals(user.getPassword(), password)) {
+    public Optional<User> login(Map<String, String> loginData) {
+        User user = repository.findUserById(loginData.get("userId"));
+        if(Objects.equals(user.getPassword(), loginData.get("password"))) {
             return Optional.of(user);
         }
         return Optional.empty();

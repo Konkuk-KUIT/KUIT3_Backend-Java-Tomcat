@@ -2,8 +2,11 @@ package webserver;
 
 import controller.Controller;
 import controller.ControllerMapper;
+import http.HttpRequest;
+import http.HttpResponse;
 import java.io.*;
 import java.net.Socket;
+import java.nio.channels.IllegalBlockingModeException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import structure.StartLine;
@@ -24,13 +27,18 @@ public class RequestHandler implements Runnable{    // Ran By Thread
             BufferedReader br = new BufferedReader(new InputStreamReader(in));  // 데이터 냠냠
             DataOutputStream dos = new DataOutputStream(out);   // 보낼 출구 뚫기
 
-            StartLine startLine = new StartLine(br.readLine());
-            Controller controller = controllerMapper.getController(startLine);
+            System.out.println("DDD");
 
-            byte[] body = controller.runLogic(br, dos, startLine); // TODO: Body 안하고 바로 외부 stream으로 보내면 좋을거 같다.
+            HttpRequest httpRequest = new HttpRequest(br);
 
-            response200Header(dos, body.length);    // Header에 필요한 body의 길이를 넣어주면 얘가 그걸 토대로 Output stream을 방출
-            responseBody(dos, body);        // 진짜 body내용을 방출
+            System.out.println(httpRequest);
+            System.out.println("HEY");
+
+            Controller controller = controllerMapper.getController(httpRequest);
+
+            HttpResponse httpResponse = controller.runLogic(httpRequest);
+
+            sendHttpResponse(dos, httpResponse);
 
         } catch (IOException e) {
             log.log(Level.SEVERE,e.getMessage());
@@ -62,6 +70,16 @@ public class RequestHandler implements Runnable{    // Ran By Thread
             dos.writeBytes("HTTP/1.1 302 OK \r\n");
             dos.writeBytes("Location: " + path + "\r\n");
             dos.writeBytes("\r\n");
+        } catch (IOException e) {
+            log.log(Level.SEVERE, e.getMessage());
+        }
+    }
+
+    private void sendHttpResponse(DataOutputStream dos, HttpResponse httpResponse) {
+        try {
+            System.out.println("SENT");
+            dos.write(httpResponse.getResponse());
+            dos.write(httpResponse.getBody());
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());
         }

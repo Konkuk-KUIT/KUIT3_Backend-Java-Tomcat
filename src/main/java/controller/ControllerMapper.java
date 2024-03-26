@@ -1,22 +1,36 @@
 package controller;
 
+import http.HttpRequest;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import structure.StartLine;
 
 public class ControllerMapper {
 
     // TODO : 나중에 따로 등록하는 객체 따로 뺴라, 얘 HashMap 안됨? 맘에 안들어, samePath but, different HTTP Method..?
-    List<Controller> controllers = new ArrayList<>(List.of((Controller)new HomeController(), (Controller) new SignUpController()));
-    public Controller getController(StartLine startLine) throws IOException {
+    // TODO : 근데 여기서 HashMap으로 하면 path 등록을 Mapper에서 해야됨 <- 별론듯) ㄴㄴ 순회하면서 HashMap에 등록 해줘도 될 듯 근데 그러면 controller가 path를 알려줘야되
 
-        for(Controller controller : controllers) {
-            if(controller.doesFit(startLine)) {
-                return controller;
-            }
-        }
-        throw new IOException("잘못된 경로요(URL)");   // 뭘 던질지 몰라 준비 해봤어~
+
+    public ControllerMapper() {
+        init();
+    }
+
+    private final Map<String, Controller> controllers = new HashMap<>();  // Make it singleton
+
+    // initializing
+    private void init() {
+        controllers.put("/", new HomeController());
+        controllers.put("/index.html", new HomeController());
+        System.out.println("initialized");
+    }
+
+    public Controller getController(HttpRequest httpRequest) {
+        System.out.println(httpRequest);
+        System.out.println("controller sent");
+        return controllers.get(httpRequest.parsePath());   // 여기서 exception 터지면 그 path에 상응하는 Controller가 없다느 거
     }
 
 }
