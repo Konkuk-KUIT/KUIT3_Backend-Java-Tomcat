@@ -48,7 +48,8 @@ public class RequestHandler implements Runnable {
                 return;
             }
             if (url.startsWith("/user/signup") && method.equals("GET")) {
-                String queryString = url.substring("/user/signup?".length());
+                int index = url.indexOf("?");
+                String queryString = url.substring(index + 1);
                 Map<String, String> elements = HttpRequestUtils.parseQueryParameter(queryString);
                 MemoryUserRepository userRepository = MemoryUserRepository.getInstance();
                 userRepository.addUser(new User(elements.get("userId"), elements.get("password"), elements.get("name"), elements.get("email")));
