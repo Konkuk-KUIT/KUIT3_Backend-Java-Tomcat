@@ -16,8 +16,8 @@ import static webserver.httprequest.UrlPath.LOGIN_FAILED;
 public class LoginController implements Controller{
     @Override
     public void excute(HttpRequest httpRequest, HttpResponse httpResponse) throws IOException {
-        String queryString = IOUtils.readData(httpRequest.getBr(), httpRequest.getContentLength());
-        Map<String,String> m = parseQueryParameter(queryString);
+        Map<String,String> m = httpRequest.getBody();
+        System.out.println(m.get("userId"));
         User user = MemoryUserRepository.getInstance().findUserById(m.get("userId"));
         if (user != null && user.getPassword().equals(m.get("password"))) {
             httpResponse.response302HeaderWithLogin(INDEX.getPath());

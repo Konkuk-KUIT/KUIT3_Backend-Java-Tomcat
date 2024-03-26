@@ -19,8 +19,7 @@ import static webserver.httprequest.UrlPath.ROOT;
 public class SignUpController implements Controller{
     @Override
     public void excute(HttpRequest httpRequest, HttpResponse httpResponse) throws IOException {
-        String queryString = IOUtils.readData(httpRequest.getBr(), httpRequest.getContentLength());
-        Map<String,String> m = parseQueryParameter(queryString);
+        Map<String,String> m = httpRequest.getBody();
         User user = new User(m.get("userId"), m.get("password"), m.get("name"), m.get("email"));
         MemoryUserRepository.getInstance().addUser(user);
         httpResponse.response302Header(INDEX.getPath());
