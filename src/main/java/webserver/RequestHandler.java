@@ -36,8 +36,10 @@ public class RequestHandler implements Runnable{
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
             DataOutputStream dos = new DataOutputStream(out);
 
+            String homeUrl = BASE_URL + HOME_URL;
             byte[] body = new byte[0];
             int requestContentLength = 0;
+            MemoryUserRepository userRepository = getInstance();
 
             // InputStream에서 요청을 읽어와 StartLine 파싱
             String startLine = br.readLine();
@@ -58,17 +60,17 @@ public class RequestHandler implements Runnable{
                 }
             }
 
-            // 1 기본값(홈) url 설정
+            // 1) 기본값(홈) url 설정
             if (requestMethod.equals("GET") && requestUrl.equals("/")) {
-                body = Files.readAllBytes(Paths.get(BASE_URL + HOME_URL));
+                body = Files.readAllBytes(Paths.get(homeUrl));
             }
 
-            // 1 .html로 끝나는 url의 경우
+            // 1) .html로 끝나는 url의 경우
             if (requestMethod.equals("GET") && requestUrl.endsWith(".html")) {
                 body = Files.readAllBytes(Paths.get(BASE_URL + requestUrl));
             }
 
-            // 2 GET 방식으로 회원가입
+            // 2) GET 방식으로 회원가입
             if (requestMethod.equals("GET") && requestUrl.startsWith("/user/signup?")) {
                 // 쿼리 스트링 기준으로 파싱
                 String[] parsedUrl = requestUrl.split("[?]");
@@ -91,11 +93,8 @@ public class RequestHandler implements Runnable{
                 String password = queryStringMap.get("password");
                 String email = queryStringMap.get("email");
 
-                User user = new User(userId, password, name, email);
-                System.out.println(userId+name+password+email);
-
                 // MemoryUserRepository 객체에 User 저장 및 확인
-                MemoryUserRepository userRepository = getInstance();
+                User user = new User(userId, password, name, email);
                 userRepository.addUser(user);
 
                 Collection<User> allUsers = userRepository.findAll();
@@ -107,6 +106,7 @@ public class RequestHandler implements Runnable{
                     System.out.println();
                 }
 
+                response302Header(dos, "/");
             }
 
             response200Header(dos, body.length);
@@ -122,6 +122,16 @@ public class RequestHandler implements Runnable{
             dos.writeBytes("HTTP/1.1 200 OK \r\n");
             dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
             dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
+            dos.writeBytes("\r\n");
+        } catch (IOException e) {
+            log.log(Level.SEVERE, e.getMessage());
+        }
+    }
+
+    private void response302Header(DataOutputStream dos, String path) {
+        try {
+            dos.writeBytes("HTTP/1.1 302 Found \r\n");
+            dos.writeBytes("Location: " + path + "\r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());
