@@ -13,7 +13,7 @@ import static webserver.httprequest.UrlPath.*;
 public class UserFormController implements Controller{
     @Override
     public void excute(HttpRequest httpRequest, HttpResponse httpResponse) throws IOException {
-        httpResponse.setBody(readAllBytes(Paths.get("./webapp" + USER_FORM.getPath())));
+        httpResponse.setBody(readAllBytes(Paths.get( FILE_ROOT.getPath() + USER_FORM.getPath())));
         httpResponse.response200Header();
         httpResponse.responseBody();
     }

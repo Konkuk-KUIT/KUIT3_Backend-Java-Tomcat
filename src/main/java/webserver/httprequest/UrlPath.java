@@ -7,7 +7,8 @@ public enum UrlPath {
     USER_LOGIN_FILE("/user/login.html"),
     USER_LOGIN("/user/login"),
     USER_LIST("/user/userList"),
-    ROOT("./webapp"),
+    FILE_ROOT("./webapp"),
+    ROOT("/"),
     LOGIN_FAILED("/login_failed.html"),
     CSS("/css/styles.css");
 

@@ -15,7 +15,7 @@ public class RequestMapper {
     private HttpResponse httpResponse;
     private Controller controller;
     Map<String, Controller> controllers = new HashMap<>(){{
-        put("/", new HomeController());
+        put(ROOT.getPath(), new HomeController());
         put(INDEX.getPath(), new ForwardController());
         put(USER_FORM.getPath(), new UserFormController());
         put(USER_SIGNUP.getPath(), new SignUpController());

@@ -8,12 +8,12 @@ import java.nio.file.Paths;
 
 import static java.nio.file.Files.readAllBytes;
 import static webserver.httprequest.UrlPath.INDEX;
-import static webserver.httprequest.UrlPath.ROOT;
+import static webserver.httprequest.UrlPath.FILE_ROOT;
 
 public class HomeController implements Controller{
     @Override
     public void excute(HttpRequest httpRequest, HttpResponse httpResponse) throws IOException {
-        httpResponse.setBody(readAllBytes(Paths.get(ROOT.getPath() + INDEX.getPath())));
+        httpResponse.setBody(readAllBytes(Paths.get(FILE_ROOT.getPath() + INDEX.getPath())));
         httpResponse.response200Header();
         httpResponse.responseBody();
     }
