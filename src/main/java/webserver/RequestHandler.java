@@ -72,7 +72,29 @@ public class RequestHandler implements Runnable{
                 User user=new User(map.get("userId"),map.get("password"),map.get("name"),map.get("email"));
                 MemoryUserRepository.getInstance().addUser(user);
                 byte[] body = Files.readAllBytes(path);
-                response302Header(dos, "http://localhost:80/");
+                response302Header(dos, "/");
+                responseBody(dos, body);
+
+            }
+            else if(Objects.equals(url,"/user/login.html")){
+                path=Paths.get("C:/Users/home/Desktop/2024_1학기/kuit/2주차/KUIT3_Backend-Java-Tomcat/webapp/user/login.html");
+
+                byte[] body = Files.readAllBytes(path);
+                response200Header(dos, body.length);
+                responseBody(dos, body);
+            }
+            else if(Objects.equals(url,"/user/login")) {
+                Map<String, String> map = HttpRequestUtils.parseQueryParameter(payload);
+                User findUser=MemoryUserRepository.getInstance().findUserById(map.get("userId"));
+                if(findUser.getPassword().equals(map.get("password"))){
+                    response302HeaderWithCookie(dos,"/");
+                }
+                else{
+                    response302Header(dos,"/");
+                }
+
+                byte[] body = Files.readAllBytes(path);
+                response200Header(dos, body.length);
                 responseBody(dos, body);
 
             }
@@ -96,6 +118,17 @@ public class RequestHandler implements Runnable{
         try {
             dos.writeBytes("HTTP/1.1 302 Found \r\n");
             dos.writeBytes("Location: " +path  + "\r\n");
+            dos.writeBytes("\r\n");
+        } catch (IOException e) {
+            log.log(Level.SEVERE, e.getMessage());
+        }
+    }
+
+    public void response302HeaderWithCookie(DataOutputStream dos, String path){
+        try {
+            dos.writeBytes("HTTP/1.1 302 Found \r\n");
+            dos.writeBytes("Location: " +path  + "\r\n");
+            dos.writeBytes("Set-Cookies: logined=true \r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());
