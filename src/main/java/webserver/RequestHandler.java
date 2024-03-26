@@ -1,10 +1,15 @@
 package webserver;
 
+import db.MemoryUserRepository;
+import http.util.HttpRequestUtils;
 import http.util.IOUtils;
+import model.User;
 
 import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -28,13 +33,29 @@ public class RequestHandler implements Runnable {
             String[] startLines = startLine.split(" ");
             String method = startLines[0];
             String url = startLines[1];
-            if(!url.equals("/") && !url.equals("/index.html")){
+            if (url.equals("/") || url.equals("/index.html")) {
+                // index.html 반환
+                byte[] body = Files.readAllBytes(new File("webapp/index.html").toPath());
+                response200Header(dos, body.length);
+                responseBody(dos, body);
                 return;
             }
-            // index.html 반환
-            byte[] body = Files.readAllBytes(new File("webapp/index.html").toPath());
-            response200Header(dos, body.length);
-            responseBody(dos, body);
+            if (url.equals("/user/form.html")) {
+                // user/form.html 반환
+                byte[] body = Files.readAllBytes(new File("webapp/user/form.html").toPath());
+                response200Header(dos, body.length);
+                responseBody(dos, body);
+                return;
+            }
+            if (url.startsWith("/user/signup") || method.equals("GET")) {
+                String queryString = url.substring("/user/signup?".length());
+                Map<String, String> elements = HttpRequestUtils.parseQueryParameter(queryString);
+                MemoryUserRepository userRepository = MemoryUserRepository.getInstance();
+                userRepository.addUser(new User(elements.get("userId"), elements.get("password"), elements.get("name"), elements.get("email")));
+                // for redirect
+                response302Header(dos, "/index.html");
+            }
+
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());
         }
@@ -60,4 +81,12 @@ public class RequestHandler implements Runnable {
         }
     }
 
+    private void response302Header(DataOutputStream dos, String path) {
+        try {
+            dos.writeBytes("HTTP/1.1 302 Found \r\n");
+            dos.writeBytes(String.format("Location: %s\r\n", path));
+        } catch (IOException e) {
+            log.log(Level.SEVERE, e.getMessage());
+        }
+    }
 }
