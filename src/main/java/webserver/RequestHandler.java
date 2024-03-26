@@ -47,9 +47,26 @@ public class RequestHandler implements Runnable {
                 responseBody(dos, body);
                 return;
             }
-            if (url.startsWith("/user/signup") || method.equals("GET")) {
+            if (url.startsWith("/user/signup") && method.equals("GET")) {
                 String queryString = url.substring("/user/signup?".length());
                 Map<String, String> elements = HttpRequestUtils.parseQueryParameter(queryString);
+                MemoryUserRepository userRepository = MemoryUserRepository.getInstance();
+                userRepository.addUser(new User(elements.get("userId"), elements.get("password"), elements.get("name"), elements.get("email")));
+                // for redirect
+                response302Header(dos, "/index.html");
+                return;
+            }
+            if (url.startsWith("/user/signup") && method.equals("POST")) {
+                // Content-Length 가져오고, BufferedReader offset 을 request message (http) body 입구에 위치
+                int requestContentLength = 0;
+                String line = "";
+                while (!(line = br.readLine()).isEmpty()) {
+                    if (line.startsWith("Content-Length")) {
+                        requestContentLength = Integer.parseInt(line.split(": ")[1]);
+                    }
+                }
+
+                Map<String, String> elements = HttpRequestUtils.parseQueryParameter(IOUtils.readData(br, requestContentLength));
                 MemoryUserRepository userRepository = MemoryUserRepository.getInstance();
                 userRepository.addUser(new User(elements.get("userId"), elements.get("password"), elements.get("name"), elements.get("email")));
                 // for redirect
