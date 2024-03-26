@@ -112,6 +112,11 @@ public class RequestHandler implements Runnable {
                     response302Header(dos, "/user/login_failed.html");
                 }
             }
+            if (url.endsWith(".css")) {
+                byte[] body = Files.readAllBytes(new File("webapp/css/styles.css").toPath());
+                response200HeaderWithCss(dos, body.length);
+                responseBody(dos, body);
+            }
 
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());
@@ -122,6 +127,17 @@ public class RequestHandler implements Runnable {
         try {
             dos.writeBytes("HTTP/1.1 200 OK \r\n");
             dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
+            dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
+            dos.writeBytes("\r\n");
+        } catch (IOException e) {
+            log.log(Level.SEVERE, e.getMessage());
+        }
+    }
+
+    private void response200HeaderWithCss(DataOutputStream dos, int lengthOfBodyContent) {
+        try {
+            dos.writeBytes("HTTP/1.1 200 OK \r\n");
+            dos.writeBytes("Content-Type: text/css;charset=utf-8\r\n");
             dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
@@ -143,16 +159,21 @@ public class RequestHandler implements Runnable {
         try {
             dos.writeBytes("HTTP/1.1 302 Found \r\n");
             dos.writeBytes("Location: " + path + "\r\n");
+            dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());
         }
     }
 
+    // (서버) 응답 헤더 (/user/login)에는 Set-Cookie 잘 설정되어 있음 (브라우저를 통해서 index.html 로 재요청을 보냈다?)
+    // 내 생각에는 index.html 의 요청 헤더에 설정된 Cookie 가 보여져야 할 것 같은데, (logined = true)
+    // 왜 없는지 모르겠다. -> 6번 진행 안됨
     private void response302HeaderWithCookie(DataOutputStream dos, String path) {
         try {
             dos.writeBytes("HTTP/1.1 302 Found \r\n");
             dos.writeBytes("Location: " + path + "\r\n");
             dos.writeBytes("Set-Cookie: logined=true\r\n");
+            dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());
         }
