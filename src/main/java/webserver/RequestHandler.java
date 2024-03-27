@@ -90,6 +90,7 @@ public class RequestHandler implements Runnable{
             }
 
 
+
             //회원가입 submit제출했을 시
             if (url.equals("/user/signup") ) {
                 String queryString = IOUtils.readData(br, requestContentLength);
@@ -120,7 +121,13 @@ public class RequestHandler implements Runnable{
                 body = Files.readAllBytes(Paths.get(ROOT_URL + LIST_URL));
             }
 
-
+            //요구사항7번
+            if (method.equals("GET") && url.endsWith(".css")) {
+                body = Files.readAllBytes(Paths.get(ROOT_URL + url));
+                response200HeaderWithCss(dos, body.length);
+                responseBody(dos, body);
+                return;
+            }
 
 
 
@@ -181,6 +188,16 @@ public class RequestHandler implements Runnable{
             log.log(Level.SEVERE, e.getMessage());
         }
     }
-
+    private void response200HeaderWithCss(DataOutputStream dos, int lengthOfBodyContent) {
+        try {
+            dos.writeBytes("HTTP/1.1 200 OK \r\n");
+            dos.writeBytes("Content-Type: text/css;charset=utf-8\r\n");
+            dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
+            dos.writeBytes("\r\n");
+            dos.flush();
+        } catch (IOException e) {
+            log.log(Level.SEVERE, e.getMessage());
+        }
+    }
 
 }
