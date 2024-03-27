@@ -1,6 +1,8 @@
 package webserver;
 
 import db.MemoryUserRepository;
+import enumModel.HTTPMethod;
+import enumModel.Path_enum;
 import http.util.HttpRequestUtils;
 import http.util.IOUtils;
 import model.User;
@@ -16,7 +18,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class RequestHandler implements Runnable{
-    private static final String PATH = "C:\\kuit\\KUIT3_Backend-Java-Tomcat\\webapp\\";
     Socket connection;
     private final MemoryUserRepository memoryUserRepository;
     private static final Logger log = Logger.getLogger(RequestHandler.class.getName());
@@ -57,39 +58,39 @@ public class RequestHandler implements Runnable{
                     System.out.println(cookie);
                 }
             }
-            Path path = Paths.get(PATH + url);
+            Path path = Paths.get(Path_enum.DEFAULT_PATH.getPath() + url);
             byte[] body = new byte[0];
-            if (method.equals("GET") && url.endsWith(".html")) {
+            if (method.equals(HTTPMethod.GET.getHttpMethod()) && url.endsWith(".html")) {
                 body = Files.readAllBytes(path);
             }
-            if(url.equals("/user/signup")){
+            if(url.equals(Path_enum.SIGN_UP_URL.getPath())){
                 //body 부분
                 String UserInfoquery = IOUtils.readData(br,requestContentLength);
                 //System.out.println(UserInfoquery);
                 Map<String,String> UserMap = HttpRequestUtils.parseQueryParameter(UserInfoquery);
                 User user = new User(UserMap.get("userId"),UserMap.get("password"),UserMap.get("name"),UserMap.get("email"));
                 memoryUserRepository.addUser(user);
-                response302Header(dos,"/index.html");
+                response302Header(dos,Path_enum.HOME_PATH.getPath());
             }
-            if(url.equals("/user/login")){
+            if(url.equals(Path_enum.LOGIN_URL.getPath())){
                 String loginUserQuery = IOUtils.readData(br,requestContentLength);
                 System.out.println(loginUserQuery);
                 Map<String,String> UserMap = HttpRequestUtils.parseQueryParameter(loginUserQuery);
                 if(memoryUserRepository.findUserById(UserMap.get("userId"))==null){ //없는 경우
-                    response302Header(dos,"/user/login_failed.html");
+                    response302Header(dos,Path_enum.LOGIN_FAILED_PATH.getPath());
                     return;
                 }
-                response302HeaderWithCookie(dos,"/index.html");
+                response302HeaderWithCookie(dos,Path_enum.HOME_PATH.getPath());
             }
-            if(url.equals("/user/userList")){
+            if(url.equals(Path_enum.LIST_PATH.getPath())){
                 if(!cookie.contains("logined=true")){
-                    response302Header(dos,"/user/login.html");
+                    response302Header(dos,Path_enum.LOGIN_PATH.getPath());
                     return;
                 }
-                Path userListPath = Paths.get(PATH +"/user/list.html");
+                Path userListPath = Paths.get(Path_enum.LIST_PATH.getPath());
                 body = Files.readAllBytes(userListPath);
             }
-            if (method.equals("GET") && url.endsWith(".css")) {
+            if (method.equals(HTTPMethod.GET.getHttpMethod()) && url.endsWith(".css")) {
                 body = Files.readAllBytes(path);
                 response200HeaderWithCss(dos, body.length);
                 responseBody(dos, body);
@@ -119,7 +120,7 @@ public class RequestHandler implements Runnable{
     private void response302HeaderWithCookie(DataOutputStream dos, String path) {
         try {
             dos.writeBytes("HTTP/1.1 302 Redirect \r\n");
-            dos.writeBytes("Location: " + path + "\r\n");
+            dos.writeBytes("Location: " +"/"+ path + "\r\n");
             dos.writeBytes("Set-Cookie: logined=true" + "\r\n");
             dos.writeBytes("\r\n");
             dos.flush();
@@ -140,8 +141,9 @@ public class RequestHandler implements Runnable{
     }
     private void response302Header(DataOutputStream dos, String path) {
         try {
+            System.out.println(path);
             dos.writeBytes("HTTP/1.1 302 Redirect \r\n");
-            dos.writeBytes("Location: " + path + "\r\n");
+            dos.writeBytes("Location: " +"/"+ path + "\r\n");
             dos.writeBytes("\r\n");
             dos.flush();
         } catch (IOException e) {
