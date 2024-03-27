@@ -3,15 +3,9 @@ package controller;
 import db.MemoryUserRepository;
 import http.HttpRequest;
 import http.HttpResponse;
-import http.util.HttpRequestUtils;
-import http.util.IOUtils;
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import service.UserService;
 
 public class LoginController implements Controller{
@@ -40,10 +34,8 @@ public class LoginController implements Controller{
         Map<String, String> loginData = httpRequest.parseBodyQueryParameter();
 
         if(userService.login(loginData).isPresent()) {
-            System.out.println("Login Successful");
             return HttpResponse.of302ResponseHeaderWithCookie("/");
         }
-        System.out.println("Login failed");
         return HttpResponse.of302ResponseHeader("/user/login?loggedIn=false");
     }
 

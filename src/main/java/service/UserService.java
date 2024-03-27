@@ -22,13 +22,10 @@ public class UserService {
 
     public Optional<User> login(Map<String, String> loginData) {
         Optional<User> user = repository.findUserById(loginData.get("userId"));
-        if(user.isEmpty()) {
+        if(user.isEmpty() || !Objects.equals(user.get().getPassword(), loginData.get("password"))) {
             return Optional.empty();
         }
-        if(Objects.equals(user.get().getPassword(), loginData.get("password"))) {
-            return user;
-        }
-        return Optional.empty();
+        return user;
     }
 
     public List<User> getAllUsers() {

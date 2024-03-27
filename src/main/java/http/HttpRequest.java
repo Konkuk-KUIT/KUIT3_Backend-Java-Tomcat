@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.Map;
 import structure.Body;
 import structure.Header;
-import structure.HttpMethod;
 import structure.RequestStartLine;
 
 public class HttpRequest {

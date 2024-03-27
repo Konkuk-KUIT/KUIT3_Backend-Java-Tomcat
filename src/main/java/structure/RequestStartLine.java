@@ -3,7 +3,6 @@ package structure;
 import http.util.HttpRequestUtils;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 public class RequestStartLine {
     private final HttpMethod httpMethod;
