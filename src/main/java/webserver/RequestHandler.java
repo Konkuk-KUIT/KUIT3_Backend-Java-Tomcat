@@ -1,12 +1,20 @@
 package webserver;
 
+import db.MemoryUserRepository;
+import db.Repository;
+import http.util.IOUtils;
+import model.User;
+
 import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static http.util.HttpRequestUtils.parseQueryParameter;
 
 
 public class RequestHandler implements Runnable{
@@ -15,6 +23,10 @@ public class RequestHandler implements Runnable{
     private static final String ROOT_URL = "./webapp";
     private static final String HOME_URL = "/index.html";
 
+    private final Repository repository;
+
+
+
     private final Path homePath = Paths.get(ROOT_URL + HOME_URL);
 
 
@@ -22,6 +34,7 @@ public class RequestHandler implements Runnable{
 
     public RequestHandler(Socket connection) {
         this.connection = connection;
+        repository = MemoryUserRepository.getInstance();
     }
 
     @Override
@@ -34,6 +47,8 @@ public class RequestHandler implements Runnable{
 
             byte[] body = new byte[0];
 
+
+
             //서버로 부터 오는 Header 분석하는 부분 //////////
             String startLine = br.readLine();
             String[] startLines = startLine.split(" ");
@@ -43,6 +58,24 @@ public class RequestHandler implements Runnable{
             String url = startLines[1];
             //url : "/"
 
+            int requestContentLength = 0;
+            String cookie = "";
+
+            while (true) {
+                final String line = br.readLine();
+                if (line.equals("")) {
+                    break;
+                }
+                if (line.startsWith("Content-Length")) {
+                    requestContentLength = Integer.parseInt(line.split(": ")[1]);
+                }
+
+                if (line.startsWith("Cookie")) {
+                    cookie = line.split(": ")[1];
+                }
+            }
+
+
             //서버에서 요청이 GET이고 .html로 끝난다면
             if (method.equals("GET") && url.endsWith(".html")) {
                 body = Files.readAllBytes(Paths.get(ROOT_URL + url));
@@ -50,6 +83,21 @@ public class RequestHandler implements Runnable{
 
             if (url.equals("/")) {
                 body = Files.readAllBytes(homePath);
+            }
+
+
+            System.out.println("method : "+method);
+            System.out.println("url : "+url);
+            //회원가입 submit제출했을 시
+            if (method.equals("GET")&& url.startsWith("/user/signup?") ) {
+                String queryString = url;
+                Map<String, String> queryParameter = parseQueryParameter(queryString);
+                System.out.println("parseQuery확인:"+queryParameter.get("userId"));
+                User user = new User(queryParameter.get("userId"), queryParameter.get("password"), queryParameter.get("name"), queryParameter.get("email"));
+                repository.addUser(user);
+                System.out.println("유저 추가 성공");
+                System.out.println("모든 유저:"+user.getUserId());
+                return;
             }
 
 
