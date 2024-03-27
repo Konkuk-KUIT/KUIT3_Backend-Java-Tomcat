@@ -1,16 +1,26 @@
 package webserver;
 
+import db.MemoryUserRepository;
+import model.User;
+
 import java.io.*;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static http.util.HttpRequestUtils.parseQueryParameter;
 
 public class RequestHandler implements Runnable{
     Socket connection;
     private static final Logger log = Logger.getLogger(RequestHandler.class.getName());
+    private final MemoryUserRepository memoryUserRepository;
 
     public RequestHandler(Socket connection) {
         this.connection = connection;
+        this.memoryUserRepository = MemoryUserRepository.getInstance();
     }
 
     @Override
@@ -20,8 +30,30 @@ public class RequestHandler implements Runnable{
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
             DataOutputStream dos = new DataOutputStream(out);
 
-//            byte[] body = "Hello World".getBytes();
-            byte[] body = writeFileBody(br);
+            String startLine = br.readLine();
+            String[] startLines = startLine.split(" ");
+            String method = startLines[0];
+            String url = startLines[1];
+
+            byte[] body = new byte[0];
+
+            if(url.equals("/")){
+                body = Files.readAllBytes(Paths.get("./webapp/index.html"));
+            }
+
+            if(method.equals("GET") && url.equals("/user/form.html")){
+                body = Files.readAllBytes(Paths.get("./webapp" + url));
+            }
+
+            if(method.equals("GET") && url.startsWith("/user/signup")){
+                String queryString = url.split("\\?")[1];
+                Map<String,String> queryMap = parseQueryParameter(queryString);
+                User user = new User(queryMap.get("userId"), queryMap.get("password"), queryMap.get("name"), queryMap.get("email"));
+                memoryUserRepository.addUser(user);
+                response302Header(dos,"/index.html");
+                return;
+            }
+
             response200Header(dos, body.length);
             responseBody(dos, body);
 
@@ -41,20 +73,21 @@ public class RequestHandler implements Runnable{
         }
     }
 
-    private byte[] writeFileBody(BufferedReader br) throws IOException{
-        FileInputStream fis = new FileInputStream("C:\\Users\\정유혁\\IdeaProjects\\KUIT3_Backend-Java-Tomcat\\webapp\\index.html");
-        int i = 0;
-        StringBuilder sb = new StringBuilder();
-        while ((i = fis.read()) != -1){
-            sb.append((char) i);
-        }
-        return sb.toString().getBytes();
-    }
     private void responseBody(DataOutputStream dos, byte[] body) {
         try {
             dos.write(body, 0, body.length);
             dos.flush();
         } catch (IOException e) {
+            log.log(Level.SEVERE, e.getMessage());
+        }
+    }
+
+    private void response302Header(DataOutputStream dos, String path){
+        try{
+            dos.writeBytes("HTTP/1.1 302 Redirect \r\n");
+            dos.writeBytes("Location: " + path + "\r\n");
+            dos.writeBytes("\r\n");
+        }catch (IOException e){
             log.log(Level.SEVERE, e.getMessage());
         }
     }
