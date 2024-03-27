@@ -23,6 +23,8 @@ public class RequestHandler implements Runnable{
     private static final String ROOT_URL = "./webapp";
     private static final String HOME_URL = "/index.html";
     private static final String LOGIN_FAILED_URL = "/user/login_failed.html";
+    private static final String LIST_URL = "/user/list.html";
+    private static final String LOGIN_URL = "/user/login.html";
 
 
     private final Repository repository;
@@ -72,9 +74,9 @@ public class RequestHandler implements Runnable{
                     requestContentLength = Integer.parseInt(line.split(": ")[1]);
                 }
 
-//                if (line.startsWith("Cookie")) {
-//                    cookie = line.split(": ")[1];
-//                }
+                if (line.startsWith("Cookie")) {
+                    cookie = line.split(": ")[1];
+                }
             }
 
 
@@ -100,6 +102,7 @@ public class RequestHandler implements Runnable{
                 return;
             }
 
+            //요구사항 5번
             if (url.equals("/user/login")) {
                 String queryString = IOUtils.readData(br, requestContentLength);
                 Map<String, String> queryParameter = parseQueryParameter(queryString);
@@ -107,6 +110,16 @@ public class RequestHandler implements Runnable{
                 login(dos, queryParameter, user);
                 return;
             }
+
+            //요구사항6번
+            if (url.equals("/user/userList")) {
+                if (!cookie.equals("logined=true")) {
+                    response302Header(dos,LOGIN_URL);
+                    return;
+                }
+                body = Files.readAllBytes(Paths.get(ROOT_URL + LIST_URL));
+            }
+
 
 
 
