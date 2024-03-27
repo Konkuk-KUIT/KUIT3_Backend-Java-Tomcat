@@ -7,8 +7,7 @@ import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Collection;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -36,6 +35,7 @@ public class RequestHandler implements Runnable{
             String homeUrl = BASE_URL + HOME_URL;
             byte[] body = new byte[0];
             int requestContentLength = 0;
+            String cookies = "";
             MemoryUserRepository userRepository = getInstance();
 
             // InputStream에서 요청을 읽어와 StartLine 파싱
@@ -55,7 +55,7 @@ public class RequestHandler implements Runnable{
                     requestContentLength = Integer.parseInt(line.split(": ")[1]);
                 }
                 if (line.startsWith("Cookie")) {
-                    System.out.println(line);
+                    cookies = line;
                 }
             }
 
@@ -160,6 +160,27 @@ public class RequestHandler implements Runnable{
                 } else { // 비회원인 경우
                     response302Header(dos, "/user/login_failed.html");
                 }
+            }
+
+            // 6) 사용자 목록 출력
+            if (requestMethod.equals("GET") && requestUrl.equals("/user/list.html")) {
+                // 리스폰스 헤더로부터 쿠키 가져와서 -> logined=true일 때에만 user list 화면으로 / 로그인 아니면 login.html으로 redirect
+                if(!cookies.isEmpty()) {
+                    String[] cookieParts = cookies.split(":");
+                    if (cookieParts.length >= 2) {
+                        String[] cookieValue = cookieParts[1].split(";");
+                        // 쿠키 값 확인
+                        for (String cookie : cookieValue) {
+                            if (cookie.trim().equals("logined=true")) {
+                                System.out.println("헤더에 logined=true 쿠키 있는 경우");
+                                response302Header(dos, "/user/list.html");
+                                return;
+                            }
+                        }
+                    }
+                }
+                System.out.println("헤더에 쿠키 없는 경우");
+                response302Header(dos, "/user/login.html");
             }
 
             response200Header(dos, body.length);
