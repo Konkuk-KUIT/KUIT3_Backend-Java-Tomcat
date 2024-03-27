@@ -32,6 +32,32 @@ public class RequestHandler implements Runnable {
             String[] startLines = startLine.split(" ");
             String method = startLines[0];
             String url = startLines[1];
+
+            // Content-Length 랑 Cookie 가져오고, BufferedReader offset 을 request message (http) body 입구에 위치
+            int requestContentLength = 0;
+            String cookie = "";
+            String line = "";
+            while (!(line = br.readLine()).isEmpty()) {
+                if (line.startsWith("Content-Length")) {
+                    requestContentLength = Integer.parseInt(line.split(": ")[1]);
+                }
+                if (line.startsWith("Cookie")) {
+                    cookie = line.split(": ")[1];
+                }
+            }
+
+            if (url.equals("/user/userList")) {
+                if (cookie.equals("logined=true")) {
+                    // user/list.html 반환
+                    byte[] body = Files.readAllBytes(new File("webapp/user/list.html").toPath());
+                    response200Header(dos, body.length);
+                    responseBody(dos, body);
+                    return;
+                }
+                // 비로그인 상태
+                response302Header(dos, "/user/login.html");
+                return;
+            }
             if (url.equals("/") || url.equals("/index.html")) {
                 // index.html 반환
                 byte[] body = Files.readAllBytes(new File("webapp/index.html").toPath());
@@ -57,15 +83,6 @@ public class RequestHandler implements Runnable {
                 return;
             }
             if (url.startsWith("/user/signup") && method.equals("POST")) {
-                // Content-Length 가져오고, BufferedReader offset 을 request message (http) body 입구에 위치
-                int requestContentLength = 0;
-                String line = "";
-                while (!(line = br.readLine()).isEmpty()) {
-                    if (line.startsWith("Content-Length")) {
-                        requestContentLength = Integer.parseInt(line.split(": ")[1]);
-                    }
-                }
-
                 Map<String, String> elements = HttpRequestUtils.parseQueryParameter(IOUtils.readData(br, requestContentLength));
                 MemoryUserRepository userRepository = MemoryUserRepository.getInstance();
                 userRepository.addUser(new User(elements.get("userId"), elements.get("password"), elements.get("name"), elements.get("email")));
@@ -88,15 +105,6 @@ public class RequestHandler implements Runnable {
                 return;
             }
             if (url.startsWith("/user/login") && method.equals("POST")) {
-                // Content-Length 가져오고, BufferedReader offset 을 request message (http) body 입구에 위치
-                int requestContentLength = 0;
-                String line = "";
-                while (!(line = br.readLine()).isEmpty()) {
-                    if (line.startsWith("Content-Length")) {
-                        requestContentLength = Integer.parseInt(line.split(": ")[1]);
-                    }
-                }
-
                 Map<String, String> elements = HttpRequestUtils.parseQueryParameter(IOUtils.readData(br, requestContentLength));
                 MemoryUserRepository userRepository = MemoryUserRepository.getInstance();
                 try {
@@ -165,14 +173,12 @@ public class RequestHandler implements Runnable {
         }
     }
 
-    // (서버) 응답 헤더 (/user/login)에는 Set-Cookie 잘 설정되어 있음 (브라우저를 통해서 index.html 로 재요청을 보냈다?)
-    // 내 생각에는 index.html 의 요청 헤더에 설정된 Cookie 가 보여져야 할 것 같은데, (logined = true)
-    // 왜 없는지 모르겠다. -> 6번 진행 안됨
+    // 트러블 슈팅 (Cookie Path)
     private void response302HeaderWithCookie(DataOutputStream dos, String path) {
         try {
             dos.writeBytes("HTTP/1.1 302 Found \r\n");
             dos.writeBytes("Location: " + path + "\r\n");
-            dos.writeBytes("Set-Cookie: logined=true\r\n");
+            dos.writeBytes("Set-Cookie: logined=true; Path=/\r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());
