@@ -3,6 +3,7 @@ package webserver;
 import db.MemoryUserRepository;
 import enumModel.HTTPMethod;
 import enumModel.Path_enum;
+import enumModel.UserQuery;
 import http.util.HttpRequestUtils;
 import http.util.IOUtils;
 import model.User;
@@ -68,7 +69,7 @@ public class RequestHandler implements Runnable{
                 String UserInfoquery = IOUtils.readData(br,requestContentLength);
                 //System.out.println(UserInfoquery);
                 Map<String,String> UserMap = HttpRequestUtils.parseQueryParameter(UserInfoquery);
-                User user = new User(UserMap.get("userId"),UserMap.get("password"),UserMap.get("name"),UserMap.get("email"));
+                User user = new User(UserMap.get(UserQuery.USERID.getUserquery()),UserMap.get(UserQuery.PASSWORD.getUserquery()),UserMap.get(UserQuery.NAME.getUserquery()),UserMap.get(UserQuery.EMAIL.getUserquery()));
                 memoryUserRepository.addUser(user);
                 response302Header(dos,Path_enum.HOME_PATH.getPath());
             }
@@ -76,7 +77,7 @@ public class RequestHandler implements Runnable{
                 String loginUserQuery = IOUtils.readData(br,requestContentLength);
                 System.out.println(loginUserQuery);
                 Map<String,String> UserMap = HttpRequestUtils.parseQueryParameter(loginUserQuery);
-                if(memoryUserRepository.findUserById(UserMap.get("userId"))==null){ //없는 경우
+                if(memoryUserRepository.findUserById(UserMap.get(UserQuery.USERID.getUserquery()))==null){ //없는 경우
                     response302Header(dos,Path_enum.LOGIN_FAILED_PATH.getPath());
                     return;
                 }
