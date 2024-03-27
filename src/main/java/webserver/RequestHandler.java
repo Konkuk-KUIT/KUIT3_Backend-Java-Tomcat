@@ -47,15 +47,15 @@ public class RequestHandler implements Runnable {
             }
 
             if (url.equals("/user/userList")) {
-                if (cookie.equals("logined=true")) {
-                    // user/list.html 반환
-                    byte[] body = Files.readAllBytes(new File("webapp/user/list.html").toPath());
-                    response200Header(dos, body.length);
-                    responseBody(dos, body);
+                // 비로그인 상태 : redirect to /user/login.html
+                if (!cookie.equals("logined=true")) {
+                    response302Header(dos, "/user/login.html");
                     return;
                 }
-                // 비로그인 상태
-                response302Header(dos, "/user/login.html");
+                // 로그인 상태 : user/list.html 반환
+                byte[] body = Files.readAllBytes(new File("webapp/user/list.html").toPath());
+                response200Header(dos, body.length);
+                responseBody(dos, body);
                 return;
             }
             if (url.equals("/") || url.equals("/index.html")) {
