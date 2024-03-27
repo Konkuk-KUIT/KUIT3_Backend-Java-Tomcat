@@ -40,48 +40,45 @@ public class RequestHandler implements Runnable{
             // 요구 사항 1
             if (httpRequest.getMethod().equals(GET.getMethod()) && httpRequest.getPath().endsWith(".html")) {
                 controller = new ForwardController();
+                System.out.println("ForwardController :"+controller);
             }
             if (url.equals("/")) {
                 controller = new HomeController();
+                System.out.println("HomeController :"+controller);
             }
-//            //요구 사항 2
-//            if(method.equals(GET.getMethod()) && url.equals(USER_FORM.getPath())){
-//                Path path = Paths.get(ROOT.getPath() + url);
-//                body = Files.readAllBytes(path);
-//            }
-//            if(method.equals(GET.getMethod()) && url.startsWith(SIGNUP.getPath())){
-//                String UserInfo = url.split("\\?")[1];
-//                Map<String,String> queryParameter = parseQueryParameter(UserInfo);
-//                String userId = queryParameter.get(USER_ID.getKey());
-//                String password = queryParameter.get(PASSWORD.getKey());
-//                String name = queryParameter.get(NAME.getKey());
-//                String email = queryParameter.get(EMAIL.getKey());
-//                User user = new User(userId, password, name, email);
-//                repository.addUser(user);
-//                httpResponse.response302Header(dos, INDEX.getPath());
-//            }
             //요구 사항 3
             if(method.equals(POST.getMethod()) && url.equals("/user/signup")){
-                controller = new SignUpController(repository);
+                controller = new SignUpController();
+                System.out.println("SignUpController :"+controller);
             }
             //요구 사항 5
-            if (url.equals("/user/login")) {
-                controller = new LoginController(repository);
+            if (url.equals("/user/login.html")){
+                controller = new LoginHtmlController();
+                System.out.println("LoginHtmlController: " + controller);
             }
+
+            if (url.equals("/user/login")) {
+                controller = new LoginController();
+                System.out.println("LoginController :"+controller);
+            }
+
 
             // 요구 사항 6
             if (url.equals("/user/userList")) {
                 controller = new ListController();
+                System.out.println("ListController :"+controller);
             }
 
             // 요구 사항 7번
             if (method.equals(GET.getMethod()) && url.endsWith(".css")) {
                 controller = new CssController();
+                System.out.println("CssController :"+controller);
             }
 
             // image
             if (method.equals(GET.getMethod()) && url.endsWith(".jpeg")) {
                 controller = new ImageController();
+                System.out.println("ImageController :"+controller);
             }
 
             controller.execute(httpRequest, httpResponse);

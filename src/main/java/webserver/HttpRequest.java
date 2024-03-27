@@ -31,14 +31,15 @@ public class HttpRequest {
             }
             if (line.startsWith("Content-Length")) {
                 request.contentLength = Integer.parseInt(line.split(": ")[1]);
-                request.body = IOUtils.readData(br, request.getContentLength());
+
             }
             if (line.startsWith("Cookie")) {
                 request.cookie = line.split(": ")[1];
             }
         }
-
-
+        if (request.contentLength > 0) {
+            request.body = IOUtils.readData(br, request.getContentLength());
+        }
         return request;
     }
 

@@ -8,7 +8,8 @@ public enum UrlPath {
     HOME("/"),
     INDEX("/index.html"),
     USER_FORM("/user/form.html"),
-    LOGIN("/user/login.html"),
+    LOGIN_HTML("/user/login.html"),
+    LOGIN("/user/login"),
     SIGNUP("/user/signup"),
     LOGIN_FAILED("/user/login_failed.html"),
     LIST("/user/list.html");
