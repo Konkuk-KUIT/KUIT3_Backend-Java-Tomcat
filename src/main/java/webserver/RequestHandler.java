@@ -63,20 +63,53 @@ public class RequestHandler implements Runnable {
                     body = Files.readAllBytes(Paths.get("webapp/index.html"));
                 }
                 // CSS 파일 요청 처리
-                else if (url.endsWith(".css")) {
+                if (url.endsWith(".css")) {
                     body = Files.readAllBytes(Paths.get(ROOT_URL + url));
                     response200HeaderWithContentType(dos, body.length, "text/css");
                     responseBody(dos, body);
                     return;
                 }
-                else if("/user/form.html".equals(url)) {
+                if ("/user/form.html".equals(url)) {
                     body = Files.readAllBytes(Paths.get("webapp/user/form.html"));
                     response200Header(dos, body.length);
                     responseBody(dos, body);
                     return;
                 }
-                // userList 페이지 요청 처리
 
+                if (startLine != null && (startLine.startsWith("GET /user/login.html"))) {
+                    body = Files.readAllBytes(Paths.get("webapp/user/login.html"));
+                    if (body != null) {
+                        response200Header(dos, body.length);
+                        responseBody(dos, body);
+                    } else {
+                        byte[] notFoundBody = "404 Not Found".getBytes();
+                        response404Header(dos, notFoundBody.length);
+                        responseBody(dos, notFoundBody);
+                    }
+                }
+
+                // userList 페이지 요청 처리
+                if (startLine != null && startLine.startsWith("GET /user/userList")) {
+                    boolean isLogin = false;
+                    while(!(startLine = br.readLine()).equals("")) {
+                        if(startLine.startsWith("Cookie")) {
+                            String cookies = startLine.split(": ")[1];
+                            isLogin = cookies.contains("logined=true");
+                        }
+                    }
+
+                    if(isLogin){
+                        body = Files.readAllBytes(Paths.get("webapp/user/list.html"));
+                        if(body != null){
+                            response200Header(dos, body.length);
+                            responseBody(dos, body);
+                        } else{
+                            byte[] notFoundBody = "404 Not Found".getBytes();
+                            response404Header(dos, notFoundBody.length);
+                            responseBody(dos, notFoundBody);
+                        }
+                    }
+                }
             }
 
             // POST 요청 처리
@@ -87,23 +120,75 @@ public class RequestHandler implements Runnable {
                 if (url.equals("/user/signup")) {
                     System.out.println("좋아요");
                     int requestContentLength = 0;
-                    String line = "1";
+
                     // 헤더 읽기
                     while (true) {// HTTP 요청의 헤더 부분을 읽어서 요청 바디의 길이를 파악
-                        line = br.readLine();
-                        if (line.equals("")) { //빈 줄을 만나면 헤더 부분의 읽기를 중지
+                        startLine = br.readLine();
+                        if (startLine.equals("")) { //빈 줄을 만나면 헤더 부분의 읽기를 중지
                             break;
                         }
-                        if (line.startsWith("Content-Length")) {
-                            requestContentLength = Integer.parseInt(line.split(": ")[1]); //Content-Length 헤더의 값을 파싱하여 contentLength 변수에 저장. ex) 'Content-Length: 1234' 에서 1234 추출
+                        if (startLine.startsWith("Content-Length")) {
+                            requestContentLength = Integer.parseInt(startLine.split(": ")[1]); //Content-Length 헤더의 값을 파싱하여 contentLength 변수에 저장. ex) 'Content-Length: 1234' 에서 1234 추출
                         }
                     }
 
                     String requestBody = IOUtils.readData(br, requestContentLength);
-                    System.out.println("여기는 실행이 될까요?");
+
                     Map<String, String> queryParameter = HttpRequestUtils.parseQueryParameter(requestBody);
                     User user = new User(queryParameter.get("userId"), queryParameter.get("password"), queryParameter.get("name"), queryParameter.get("email"));
                     repository.addUser(user);
+                    response302Header(dos, "/index.html");
+                    return;
+                }
+
+                if (url.equals("/user/login")) {
+                    System.out.println("로그인 시도");
+                    int requestContentLength = 0;
+
+                    // 헤더 읽기
+                    while (true) {// HTTP 요청의 헤더 부분을 읽어서 요청 바디의 길이를 파악
+                        startLine = br.readLine();
+                        if (startLine.equals("")) { //빈 줄을 만나면 헤더 부분의 읽기를 중지
+                            break;
+                        }
+                        if (startLine.startsWith("Content-Length")) {
+                            requestContentLength = Integer.parseInt(startLine.split(": ")[1]); //Content-Length 헤더의 값을 파싱하여 contentLength 변수에 저장. ex) 'Content-Length: 1234' 에서 1234 추출
+                        }
+                    }
+
+                    String requestBody = IOUtils.readData(br, requestContentLength);
+                    System.out.println("로그인 정보 읽어오기");
+                    // 아이디, 비번 파싱
+                    Map<String, String> bodyData = HttpRequestUtils.parseQueryParameter(requestBody);
+                    String userId = bodyData.get("userId");
+                    String userPw = bodyData.get("password");
+
+                    // DB에서 회원정보 조회하기
+                    User loginUser = MemoryUserRepository.getInstance().findUserById(userId);
+                    if(loginUser != null && loginUser.getPassword().equals(userPw)){
+                        System.out.println("로그인에 성공했어요!!");
+                        try{
+                            dos.writeBytes("HTTP/1.1 302Found \r\n");
+                            dos.writeBytes("Location: " + "/" + "\r\n");
+                            dos.writeBytes("Set-Cookie: logined=true \r\n"); //유저가 동일하다면 쿠키 설정
+                            dos.writeBytes("\r\n");
+                        } catch (IOException e) {
+                            log.log(Level.SEVERE, e.getMessage());
+                        }
+                    } else{
+                        System.out.println("로그인에 실패했어요 ㅠ.");
+                        System.out.println("userId = " + userId);
+                        System.out.println("userPw = " + userPw);
+                        body = Files.readAllBytes(Paths.get(ROOT_URL + "/user/login_failed.html"));
+                        if (body != null) {
+                            response200Header(dos, body.length);
+                            responseBody(dos, body);
+                        } else {
+                            byte[] notFoundBody = "404 Not Found".getBytes();
+                            response404Header(dos, notFoundBody.length);
+                            responseBody(dos, notFoundBody);
+                        }
+                    }
                     response302Header(dos, "/index.html");
                     return;
                 }
