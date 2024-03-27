@@ -22,6 +22,8 @@ public class RequestHandler implements Runnable{
     Socket connection;
     private static final String ROOT_URL = "./webapp";
     private static final String HOME_URL = "/index.html";
+    private static final String LOGIN_FAILED_URL = "/user/login_failed.html";
+
 
     private final Repository repository;
 
@@ -98,6 +100,14 @@ public class RequestHandler implements Runnable{
                 return;
             }
 
+            if (url.equals("/user/login")) {
+                String queryString = IOUtils.readData(br, requestContentLength);
+                Map<String, String> queryParameter = parseQueryParameter(queryString);
+                User user = repository.findUserById(queryParameter.get("userId"));
+                login(dos, queryParameter, user);
+                return;
+            }
+
 
 
 
@@ -120,6 +130,14 @@ public class RequestHandler implements Runnable{
         }
     }
 
+    private void login(DataOutputStream dos, Map<String, String> queryParameter, User user) {
+        if (user != null && user.getPassword().equals(queryParameter.get("password"))) {
+            response302HeaderWithCookie(dos,HOME_URL);
+            return;
+        }
+        response302Header(dos,LOGIN_FAILED_URL);
+    }
+
     private void responseBody(DataOutputStream dos, byte[] body) {
         try {
             dos.write(body, 0, body.length);
@@ -139,5 +157,17 @@ public class RequestHandler implements Runnable{
             log.log(Level.SEVERE, e.getMessage());
         }
     }
+    private void response302HeaderWithCookie(DataOutputStream dos, String path) {
+        try {
+            dos.writeBytes("HTTP/1.1 302 Redirect \r\n");
+            dos.writeBytes("Location: " + path + "\r\n");
+            dos.writeBytes("Set-Cookie: logined=true" + "\r\n");
+            dos.writeBytes("\r\n");
+            dos.flush();
+        } catch (IOException e) {
+            log.log(Level.SEVERE, e.getMessage());
+        }
+    }
+
 
 }
