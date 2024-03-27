@@ -8,8 +8,7 @@ import java.util.stream.Collectors;
 public class HttpRequestUtils {
     public static Map<String, String> parseQueryParameter(String queryString) {
         try {
-            String deletequery=queryString.substring(13);
-            String[] queryStrings = deletequery.split("&");
+            String[] queryStrings = queryString.split("&");
 
             return Arrays.stream(queryStrings)
                     .map(q -> q.split("="))

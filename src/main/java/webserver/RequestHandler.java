@@ -70,9 +70,9 @@ public class RequestHandler implements Runnable{
                     requestContentLength = Integer.parseInt(line.split(": ")[1]);
                 }
 
-                if (line.startsWith("Cookie")) {
-                    cookie = line.split(": ")[1];
-                }
+//                if (line.startsWith("Cookie")) {
+//                    cookie = line.split(": ")[1];
+//                }
             }
 
 
@@ -86,17 +86,13 @@ public class RequestHandler implements Runnable{
             }
 
 
-            System.out.println("method : "+method);
-            System.out.println("url : "+url);
             //회원가입 submit제출했을 시
-            if (method.equals("GET")&& url.startsWith("/user/signup?") ) {
-                String queryString = url;
+            if (url.equals("/user/signup") ) {
+                String queryString = IOUtils.readData(br, requestContentLength);
                 Map<String, String> queryParameter = parseQueryParameter(queryString);
-                System.out.println("parseQuery확인:"+queryParameter.get("userId"));
                 User user = new User(queryParameter.get("userId"), queryParameter.get("password"), queryParameter.get("name"), queryParameter.get("email"));
                 repository.addUser(user);
-                System.out.println("유저 추가 성공");
-                System.out.println("모든 유저:"+user.getUserId());
+                System.out.println("user : "+user.getName());
                 return;
             }
 
