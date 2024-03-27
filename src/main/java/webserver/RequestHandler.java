@@ -55,7 +55,7 @@ public class RequestHandler implements Runnable{
                     requestContentLength = Integer.parseInt(line.split(": ")[1]);
                 }
                 if (line.startsWith("Cookie")) {
-
+                    System.out.println(line);
                 }
             }
 
@@ -147,7 +147,20 @@ public class RequestHandler implements Runnable{
                 response302Header(dos, "/");
             }
 
-            //
+            // 5) 로그인
+            if (requestMethod.equals("POST") && requestUrl.equals("/user/login")) {
+                String requestBody = readData(br, requestContentLength);
+                Map<String, String> queryStringMap = parseQueryParameter(requestBody);
+
+                User user = userRepository.findUserById(queryStringMap.get("userId"));
+                // 회원인 경우
+                if (user != null) {
+                    String cookie = "logined=true";
+                    response302HeaderWithCookie(dos, "/", cookie);
+                } else { // 비회원인 경우
+                    response302Header(dos, "/user/login_failed.html");
+                }
+            }
 
             response200Header(dos, body.length);
             responseBody(dos, body);
@@ -182,7 +195,7 @@ public class RequestHandler implements Runnable{
         try {
             dos.writeBytes("HTTP/1.1 302 Found \r\n");
             dos.writeBytes("Location: " + path + "\r\n");
-            dos.writeBytes("Cookie: " + cookie + "\r\n");
+            dos.writeBytes("Set-Cookie: " + cookie + "; Path=" + path + "\r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());
