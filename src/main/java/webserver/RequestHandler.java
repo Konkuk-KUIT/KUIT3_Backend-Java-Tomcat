@@ -93,6 +93,8 @@ public class RequestHandler implements Runnable{
                 User user = new User(queryParameter.get("userId"), queryParameter.get("password"), queryParameter.get("name"), queryParameter.get("email"));
                 repository.addUser(user);
                 System.out.println("user : "+user.getName());
+                response302Header(dos,HOME_URL);
+
                 return;
             }
 
@@ -121,6 +123,17 @@ public class RequestHandler implements Runnable{
     private void responseBody(DataOutputStream dos, byte[] body) {
         try {
             dos.write(body, 0, body.length);
+            dos.flush();
+        } catch (IOException e) {
+            log.log(Level.SEVERE, e.getMessage());
+        }
+    }
+    private void response302Header(DataOutputStream dos, String path) {
+        //302(임시 이동): 현재 서버가 다른 위치의 페이지로 요청에 응답하고 있지만 요청자는 향후 요청 시 원래 위치를 계속 사용해야 한다.
+        try {
+            dos.writeBytes("HTTP/1.1 302 Redirect \r\n");
+            dos.writeBytes("Location: " + path + "\r\n");
+            dos.writeBytes("\r\n");
             dos.flush();
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());
