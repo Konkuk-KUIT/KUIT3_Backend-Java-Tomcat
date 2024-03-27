@@ -15,6 +15,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static http.util.HttpRequestUtils.parseQueryParameter;
+import static webserver.HttpHeader.*;
 import static webserver.Url.*;
 
 
@@ -138,10 +139,10 @@ public class RequestHandler implements Runnable{
 
     private void response200Header(DataOutputStream dos, int lengthOfBodyContent) {
         try {
-            dos.writeBytes("HTTP/1.1 200 OK \r\n");
-            dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
-            dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
-            dos.writeBytes("\r\n");
+            dos.writeBytes(HTTP200.getHeader());
+            dos.writeBytes(ContextTypeHtml.getHeader());
+            dos.writeBytes(ContentLength.getHeader() + lengthOfBodyContent + "\r\n");
+            dos.writeBytes(Escape.getHeader());
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());
         }
@@ -166,9 +167,9 @@ public class RequestHandler implements Runnable{
     private void response302Header(DataOutputStream dos, String path) {
         //302(임시 이동): 현재 서버가 다른 위치의 페이지로 요청에 응답하고 있지만 요청자는 향후 요청 시 원래 위치를 계속 사용해야 한다.
         try {
-            dos.writeBytes("HTTP/1.1 302 Redirect \r\n");
-            dos.writeBytes("Location: " + path + "\r\n");
-            dos.writeBytes("\r\n");
+            dos.writeBytes(HTTP302.getHeader());
+            dos.writeBytes( Location.getHeader()+ path + Escape.getHeader());
+            dos.writeBytes(Escape.getHeader());
             dos.flush();
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());
@@ -176,10 +177,10 @@ public class RequestHandler implements Runnable{
     }
     private void response302HeaderWithCookie(DataOutputStream dos, String path) {
         try {
-            dos.writeBytes("HTTP/1.1 302 Redirect \r\n");
-            dos.writeBytes("Location: " + path + "\r\n");
-            dos.writeBytes("Set-Cookie: logined=true" + "\r\n");
-            dos.writeBytes("\r\n");
+            dos.writeBytes(HTTP302.getHeader() );
+            dos.writeBytes(Location.getHeader() + path + Escape.getHeader());
+            dos.writeBytes(SetCookie.getHeader() + Escape.getHeader());
+            dos.writeBytes(Escape.getHeader());
             dos.flush();
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());
@@ -187,10 +188,10 @@ public class RequestHandler implements Runnable{
     }
     private void response200HeaderWithCss(DataOutputStream dos, int lengthOfBodyContent) {
         try {
-            dos.writeBytes("HTTP/1.1 200 OK \r\n");
-            dos.writeBytes("Content-Type: text/css;charset=utf-8\r\n");
-            dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
-            dos.writeBytes("\r\n");
+            dos.writeBytes(HTTP200.getHeader());
+            dos.writeBytes(ContextTypeCss.getHeader());
+            dos.writeBytes(ContentLength.getHeader() + lengthOfBodyContent +Escape.getHeader());
+            dos.writeBytes(Escape.getHeader());
             dos.flush();
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());
