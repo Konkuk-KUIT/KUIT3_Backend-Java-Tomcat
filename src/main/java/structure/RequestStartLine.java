@@ -3,6 +3,7 @@ package structure;
 import http.util.HttpRequestUtils;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class RequestStartLine {
     private final HttpMethod httpMethod;
@@ -58,5 +59,9 @@ public class RequestStartLine {
 
     public boolean isGet() {
         return this.httpMethod == HttpMethod.GET;
+    }
+
+    public Map<String, String> getQueryString() {
+        return queryString;
     }
 }

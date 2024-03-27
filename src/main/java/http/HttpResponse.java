@@ -23,6 +23,11 @@ public class HttpResponse {
         return new HttpResponse(header, new byte[0]);
     }
 
+    public static HttpResponse of302ResponseHeaderWithCookie(String path) {
+        byte[] header = get302ResponseHeaderWithCookie(path);
+        return new HttpResponse(header, new byte[0]);
+    }
+
     public byte[] getHeader() {
         return this.header;
     }
@@ -53,6 +58,13 @@ public class HttpResponse {
     private static byte[] get302ResponseHeader(String path) {
         String header = "HTTP/1.1 302 OK \r\n" + "Location: " + path + "\r\n"
                 + "\r\n";
+        return header.getBytes();
+    }
+
+    private static byte[] get302ResponseHeaderWithCookie(String path) {     // 뀨? 쿠키? 확인 안도 // set cookie는 내가 따로 추가한거
+        String header = "HTTP/1.1 302 OK \r\n" + "Set-Cookie: logined=true \r\n" + "Location: " + path + "\r\n"
+                + "\r\n" + "\r\n";
+        System.out.println("내가 만든 쿠키");
         return header.getBytes();
     }
 }

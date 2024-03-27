@@ -20,11 +20,6 @@ public class HttpRequest {
         this.body = parseBody(br);
     }
 
-    private HttpMethod parseHttpMethod(String startLine) throws IOException {
-        String[] startLines = startLine.split(" ");
-        return HttpMethod.valueOf(startLines[0]);
-    }
-
     private Header parseHeader(BufferedReader br) throws IOException {
         Header header = new Header();
         while (true) {
@@ -73,5 +68,9 @@ public class HttpRequest {
 
     public String parsePath() {
         return this.requestStartLine.parsePath();
+    }
+
+    public Map<String, String> getQueryStringMap() {
+        return requestStartLine.getQueryString();
     }
 }

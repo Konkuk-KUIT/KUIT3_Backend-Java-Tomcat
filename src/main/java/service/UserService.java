@@ -21,6 +21,7 @@ public class UserService {
     }
 
     public Optional<User> login(Map<String, String> loginData) {
+        System.out.println(loginData);
         User user = repository.findUserById(loginData.get("userId"));
         if(Objects.equals(user.getPassword(), loginData.get("password"))) {
             return Optional.of(user);

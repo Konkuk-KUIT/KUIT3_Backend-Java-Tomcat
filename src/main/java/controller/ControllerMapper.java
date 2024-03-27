@@ -21,6 +21,7 @@ public class ControllerMapper {
         controllers.put("/", new HomeController());
         controllers.put("/index.html", new HomeController());
         controllers.put("/user/signup", new SignUpController());
+        controllers.put("/user/login", new LoginController());
     }
 
     public Controller getController(HttpRequest httpRequest) {
