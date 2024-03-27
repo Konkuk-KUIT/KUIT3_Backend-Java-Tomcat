@@ -20,7 +20,8 @@ public class RequestHandler implements Runnable{
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
             DataOutputStream dos = new DataOutputStream(out);
 
-            byte[] body = "Hello World".getBytes();
+//            byte[] body = "Hello World".getBytes();
+            byte[] body = writeFileBody(br);
             response200Header(dos, body.length);
             responseBody(dos, body);
 
@@ -40,6 +41,15 @@ public class RequestHandler implements Runnable{
         }
     }
 
+    private byte[] writeFileBody(BufferedReader br) throws IOException{
+        FileInputStream fis = new FileInputStream("C:\\Users\\정유혁\\IdeaProjects\\KUIT3_Backend-Java-Tomcat\\webapp\\index.html");
+        int i = 0;
+        StringBuilder sb = new StringBuilder();
+        while ((i = fis.read()) != -1){
+            sb.append((char) i);
+        }
+        return sb.toString().getBytes();
+    }
     private void responseBody(DataOutputStream dos, byte[] body) {
         try {
             dos.write(body, 0, body.length);
