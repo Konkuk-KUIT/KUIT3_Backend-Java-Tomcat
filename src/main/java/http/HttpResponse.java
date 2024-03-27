@@ -28,6 +28,12 @@ public class HttpResponse {
         return new HttpResponse(header, new byte[0]);
     }
 
+    public static HttpResponse of200CssResponse(String path) {
+        byte[] body = readFile(path);
+        byte[] header = get200CssResponseHeader(body.length);
+        return new HttpResponse(header, body);
+    }
+
     public byte[] getHeader() {
         return this.header;
     }
@@ -65,6 +71,12 @@ public class HttpResponse {
         String header = "HTTP/1.1 302 OK \r\n" + "Set-Cookie: logined=true \r\n" + "Location: " + path + "\r\n"
                 + "\r\n" + "\r\n";
         System.out.println("내가 만든 쿠키");
+        return header.getBytes();
+    }
+
+    private static byte[] get200CssResponseHeader(int contentLength) {
+        String header = "HTTP/1.1 200 OK \r\n" + "Content-Type: text/css\r\n" + "Content-Length: " +
+                contentLength + "\r\n" + "\r\n";
         return header.getBytes();
     }
 }

@@ -11,7 +11,7 @@ public class Header {
     Map<String ,String> attributes = new HashMap<>();   // TODO: Better naming..?
 
     public void addAttribute(String line) {
-        String[] attribute = line.split(": ");
+        String[] attribute = line.split(": ");;
 
         attributes.put(attribute[0], attribute[1]);
     }
