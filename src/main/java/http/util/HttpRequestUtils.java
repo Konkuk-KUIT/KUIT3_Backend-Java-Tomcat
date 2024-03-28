@@ -1,13 +1,9 @@
 package http.util;
 
-import http.HttpRequest;
-import java.io.BufferedReader;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
-import structure.HeaderKey;
 
 public class HttpRequestUtils {
     public static Map<String, String> parseQueryParameter(String queryString) {
@@ -20,20 +16,5 @@ public class HttpRequestUtils {
         } catch (Exception e) {
             return new HashMap<>();
         }
-    }
-
-    public static int parseContentLength(BufferedReader br) throws IOException {
-        int requestContentLength = 0;
-        while (true) {
-            final String line = br.readLine();
-            if (line.isEmpty()) {
-                break;
-            }
-            // header info
-            if (line.startsWith(HeaderKey.CONTENT_LENGTH.getHeaderKey())) {
-                requestContentLength = Integer.parseInt(line.split(": ")[1]);
-            }
-        }
-        return requestContentLength;
     }
 }

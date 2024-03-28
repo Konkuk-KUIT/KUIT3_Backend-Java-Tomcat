@@ -6,7 +6,7 @@ import structure.Header;
 import structure.HeaderKey;
 import structure.ResponseStartLine;
 
-public class HomeController implements Controller {     // Get에만 응답하는 친구 입니다.
+public class HomeController implements Controller {
 
     @Override
     public HttpResponse runLogic(HttpRequest httpRequest) {

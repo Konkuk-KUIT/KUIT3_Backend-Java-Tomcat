@@ -32,26 +32,19 @@ public class HttpRequest {
     }
 
     private Body parseBody(BufferedReader br) throws IOException {
-        if(hasBody()) {
-            int contentLength = parseContentLength();
+        int contentLength = parseContentLength();
 
-            char[] body = new char[contentLength];
-            br.read(body, 0, contentLength);
-            return new Body(String.copyValueOf(body));
-        }
-        return null;
-    }
-
-    private boolean hasBody() {
-        return parseHeaderValue(HeaderKey.CONTENT_LENGTH) != null;  // TODO: ENUM 얘 진짜 필요없어 보이는데 parseContentLength()가 Optional로 반환한다면
+        char[] body = new char[contentLength];
+        br.read(body, 0, contentLength);
+        return new Body(String.copyValueOf(body));
     }
 
     private int parseContentLength() {    // 자주 써서 이 친구는 만들었습니다. TODO: 얘 따로 뺴자잉...not sure
-        return Integer.parseInt(header.parseAttributeValue(HeaderKey.CONTENT_LENGTH));//TODO: hardcoidng 삭제바람...not sure
+        return Integer.parseInt(header.parseAttributeValue(HeaderKey.CONTENT_LENGTH).orElse("0"));//TODO: hardcoidng 삭제바람...not sure
     }
 
     public String parseHeaderValue(HeaderKey headerKey) {
-        return this.header.parseAttributeValue(headerKey);
+        return this.header.parseAttributeValue(headerKey).orElse("");
     }
 
     public Map<String, String> parseBodyQueryParameter() {

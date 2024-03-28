@@ -37,7 +37,7 @@ public class LoginController implements Controller{
         return HttpResponse.ofFile(startLine, header, "/Users/tony/IdeaProjects/KUIT3_Backend-Java-Tomcat/webapp/user/login.html");
     }
 
-    private HttpResponse httpPostMethodLogic(HttpRequest httpRequest) throws IOException {    // TODO: 똥코드
+    private HttpResponse httpPostMethodLogic(HttpRequest httpRequest) throws IOException {
         Map<String, String> loginData = httpRequest.parseBodyQueryParameter();
         ResponseStartLine responseStartLine = ResponseStartLine.ofResponseCode("302");
         Header header = new Header();

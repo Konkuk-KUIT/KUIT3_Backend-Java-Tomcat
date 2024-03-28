@@ -52,7 +52,7 @@ public class HttpResponse {
     }
 
     private static byte[] readFile(String path) {
-        try (FileInputStream input = new FileInputStream(path)) {    // TODO: 얘 고쳐라, Path.of() 몰라
+        try (FileInputStream input = new FileInputStream(path)) {
             return input.readAllBytes();
         } catch (IOException e) {
             System.out.println("잘못된 경로입니다.");

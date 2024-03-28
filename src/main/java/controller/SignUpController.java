@@ -11,9 +11,9 @@ import structure.Header;
 import structure.HeaderKey;
 import structure.ResponseStartLine;
 
-public class SignUpController implements Controller {   // GET, POST 둘다 응답하는 친구 입니다.
+public class SignUpController implements Controller {
 
-    private final UserService userService = new UserService(MemoryUserRepository.getInstance());        // TODO: Singleton 해라
+    private final UserService userService = new UserService(MemoryUserRepository.getInstance());
 
     @Override
     public HttpResponse runLogic(HttpRequest httpRequest) throws IOException {
@@ -33,7 +33,7 @@ public class SignUpController implements Controller {   // GET, POST 둘다 응�
         return HttpResponse.ofFile(startLine, header, "/Users/tony/IdeaProjects/KUIT3_Backend-Java-Tomcat/webapp/user/form.html");
     }
 
-    private HttpResponse httpPostMethodLogic(HttpRequest httpRequest) throws IOException, IllegalArgumentException {    // TODO: 똥코드
+    private HttpResponse httpPostMethodLogic(HttpRequest httpRequest) throws IOException, IllegalArgumentException {
         Map<String, String> signUpData = httpRequest.parseBodyQueryParameter();
 
         userService.signUpUser(signUpData);

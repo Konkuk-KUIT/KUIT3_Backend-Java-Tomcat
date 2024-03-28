@@ -12,6 +12,7 @@ public class UserController implements Controller{
     @Override
     public HttpResponse runLogic(HttpRequest httpRequest) throws IOException {
         if(isLoggedIn(httpRequest)) {
+            System.out.println("USERLIST");
             return showUserListResponse();
         }
         return redirectToLogin();
@@ -20,7 +21,7 @@ public class UserController implements Controller{
     private boolean isLoggedIn(HttpRequest httpRequest) {
         String cookie = httpRequest.parseHeaderValue(HeaderKey.COOKIE);
         System.out.println(cookie);
-        if(cookie != null && cookie.equals("logined=true")) {
+        if(cookie != null && cookie.equals("login=true")) {
             return true;
         };
         return false;

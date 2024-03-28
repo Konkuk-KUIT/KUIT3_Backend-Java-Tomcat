@@ -2,13 +2,14 @@ package structure;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class Header {
 
     public Header() {
     }
 
-    Map<String, String> attributes = new HashMap<>();   // TODO: Better naming..? 모든 값을 enum으로 갔고 있긴 무리
+    Map<String, String> attributes = new HashMap<>();
 
     public void refineAttribute(String line) {
         String[] attribute = line.split(": ");
@@ -17,8 +18,11 @@ public class Header {
         attributes.put(attribute[0], attribute[1]);
     }
 
-    public String parseAttributeValue(HeaderKey headerKey) {   // Exception 처리
-        return attributes.get(headerKey.getHeaderKey());
+    public Optional<String> parseAttributeValue(HeaderKey headerKey) {   // Exception 처리
+        if (attributes.get(headerKey.getHeaderKey()) == null) {
+            return Optional.empty();
+        }
+        return Optional.of(attributes.get(headerKey.getHeaderKey()));
     }
 
     public void addAttribute(HeaderKey key, String value) {
