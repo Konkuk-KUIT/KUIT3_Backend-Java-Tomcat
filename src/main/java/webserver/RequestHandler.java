@@ -55,12 +55,13 @@ public class RequestHandler implements Runnable {
                     break;
                 }
                 if (line.startsWith("Content-Length")) {
-                    requestContentLength = Integer.parseInt(line.split(":")[1]);
+                    System.out.println(line);
+                    requestContentLength = Integer.parseInt(line.split(": ")[1]);
                 }
             }
 
             if (method.equals("GET") && url.equals("/")) {
-                body = Files.readAllBytes(homePath);;
+                body = Files.readAllBytes(homePath);
             }
 
             if (method.equals("GET") && url.endsWith(".html")) {
