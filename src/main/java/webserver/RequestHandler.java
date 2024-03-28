@@ -1,7 +1,8 @@
 package webserver;
 
+import HttpRequest.RequestMessage;
 import db.MemoryUserRepository;
-import domain.HttpResponse;
+import HttpResponse.ResponseHeaderConstants;
 import model.User;
 
 import java.io.*;
@@ -35,30 +36,14 @@ public class RequestHandler implements Runnable{
 
             String homeUrl = BASE_URL + HOME_URL;
             byte[] body = new byte[0];
-            int requestContentLength = 0;
-            String cookies = "";
             MemoryUserRepository userRepository = getInstance();
 
-            // InputStream에서 요청을 읽어와 StartLine 파싱
-            String startLine = br.readLine();
-            String[] startLines = startLine.split(" ");
-            String requestMethod = startLines[0];
-            String requestUrl = startLines[1];
+            RequestMessage requestMessage = RequestMessage.from(br);
 
-            // Header 파싱
-            while (true) {
-                final String line = br.readLine();
-                // blank line 만나면 requestBody 시작되므로 break
-                if (line.equals("")) {
-                    break;
-                }
-                if (line.startsWith("Content-Length")) {
-                    requestContentLength = Integer.parseInt(line.split(": ")[1]);
-                }
-                if (line.startsWith("Cookie")) {
-                    cookies = line;
-                }
-            }
+            String requestMethod = requestMessage.getStartLine().getMethod();
+            String requestUrl = requestMessage.getStartLine().getUrl();
+            int requestContentLength = requestMessage.getHeader().getContentLength();
+            String cookies = requestMessage.getHeader().getCookie();
 
             // 1) 기본값(홈) url 설정
             if (requestMethod.equals("GET") && requestUrl.equals("/")) {
@@ -207,8 +192,8 @@ public class RequestHandler implements Runnable{
 
     private void response200Header(DataOutputStream dos, int lengthOfBodyContent) {
         try {
-            dos.writeBytes(HttpResponse.START_LINE_200.getValue());
-            dos.writeBytes(HttpResponse.CONTENT_TYPE_HTML.getValue());
+            dos.writeBytes(ResponseHeaderConstants.START_LINE_200.getValue());
+            dos.writeBytes(ResponseHeaderConstants.CONTENT_TYPE_HTML.getValue());
             dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
@@ -218,8 +203,8 @@ public class RequestHandler implements Runnable{
 
     private void response200HeaderWithCss(DataOutputStream dos) {
         try {
-            dos.writeBytes(HttpResponse.START_LINE_200.getValue());
-            dos.writeBytes(HttpResponse.CONTENT_TYPE_CSS.getValue());
+            dos.writeBytes(ResponseHeaderConstants.START_LINE_200.getValue());
+            dos.writeBytes(ResponseHeaderConstants.CONTENT_TYPE_CSS.getValue());
             dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());
@@ -228,7 +213,7 @@ public class RequestHandler implements Runnable{
 
     private void response302Header(DataOutputStream dos, String path) {
         try {
-            dos.writeBytes(HttpResponse.START_LINE_302.getValue());
+            dos.writeBytes(ResponseHeaderConstants.START_LINE_302.getValue());
             dos.writeBytes("Location: " + path + "\r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
@@ -238,7 +223,7 @@ public class RequestHandler implements Runnable{
 
     private void response302HeaderWithCookie(DataOutputStream dos, String path, String cookie) {
         try {
-            dos.writeBytes(HttpResponse.START_LINE_302.getValue());
+            dos.writeBytes(ResponseHeaderConstants.START_LINE_302.getValue());
             dos.writeBytes("Location: " + path + "\r\n");
             dos.writeBytes("Set-Cookie: " + cookie + "; Path=" + path + "\r\n");
             dos.writeBytes("\r\n");
