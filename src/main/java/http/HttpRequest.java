@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.Map;
 import structure.Body;
 import structure.Header;
+import structure.HeaderKey;
 import structure.RequestStartLine;
 
 public class HttpRequest {
@@ -26,7 +27,7 @@ public class HttpRequest {
             if(line.isEmpty()) {    // Catching the empty line in HTML Message
                 return header;
             }
-            header.addAttribute(line);
+            header.refineAttribute(line);
         }
     }
 
@@ -42,15 +43,15 @@ public class HttpRequest {
     }
 
     private boolean hasBody() {
-        return parseHeaderValue("Content-Length") != null;  // TODO: ENUM
+        return parseHeaderValue(HeaderKey.CONTENT_LENGTH) != null;  // TODO: ENUM 얘 진짜 필요없어 보이는데 parseContentLength()가 Optional로 반환한다면
     }
 
     private int parseContentLength() {    // 자주 써서 이 친구는 만들었습니다. TODO: 얘 따로 뺴자잉...not sure
-        return Integer.parseInt(header.parseAttributeValue("Content-Length"));//TODO: hardcoidng 삭제바람...not sure
+        return Integer.parseInt(header.parseAttributeValue(HeaderKey.CONTENT_LENGTH));//TODO: hardcoidng 삭제바람...not sure
     }
 
-    public String parseHeaderValue(String key) {
-        return this.header.parseAttributeValue(key);
+    public String parseHeaderValue(HeaderKey headerKey) {
+        return this.header.parseAttributeValue(headerKey);
     }
 
     public Map<String, String> parseBodyQueryParameter() {

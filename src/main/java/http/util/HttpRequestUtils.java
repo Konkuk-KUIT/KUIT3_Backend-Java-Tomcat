@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
+import structure.HeaderKey;
 
 public class HttpRequestUtils {
     public static Map<String, String> parseQueryParameter(String queryString) {
@@ -29,7 +30,7 @@ public class HttpRequestUtils {
                 break;
             }
             // header info
-            if (line.startsWith("Content-Length")) {
+            if (line.startsWith(HeaderKey.CONTENT_LENGTH.getHeaderKey())) {
                 requestContentLength = Integer.parseInt(line.split(": ")[1]);
             }
         }

@@ -3,6 +3,7 @@ package controller;
 import http.HttpRequest;
 import http.HttpResponse;
 import java.io.IOException;
+import structure.HeaderKey;
 
 public class UserController implements Controller{
     @Override
@@ -14,7 +15,7 @@ public class UserController implements Controller{
     }
 
     private boolean isLoggedIn(HttpRequest httpRequest) {
-        String cookie = httpRequest.parseHeaderValue("Cookie");
+        String cookie = httpRequest.parseHeaderValue(HeaderKey.COOKIE);
         System.out.println(cookie);
         if(cookie != null && cookie.equals("logined=true")) {
             return true;
