@@ -1,19 +1,27 @@
 package webserver;
 
+import db.Repository;
+import db.MemoryUserRepository;
+import http.util.HttpRequestUtils;
+import http.util.IOUtils;
+import model.User;
+
 import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class RequestHandler implements Runnable{
     Socket connection;
     private static final Logger log = Logger.getLogger(RequestHandler.class.getName());
-
+    private final Repository repository;
     public RequestHandler(Socket connection) {
         this.connection = connection;
+        repository = MemoryUserRepository.getInstance();
     }
 
     @Override
@@ -40,6 +48,25 @@ public class RequestHandler implements Runnable{
                 body = Files.readAllBytes(Path.of("/index.html"));
             }
 
+            //1-2
+            int idx = url.indexOf('?');
+            String queryString = idx > -1 ? url.substring(idx + 1) : "";
+            if(url.contains("/user/signup") && method.equals("GET")){
+                // 쿼리 스트링 정보를 파싱
+                Map<String, String> queryParameters = HttpRequestUtils.parseQueryParameter(queryString);
+
+                // User 생성
+                User user = new User(queryParameters.get("userId"), queryParameters.get("password"),
+                        queryParameters.get("name"), queryParameters.get("email"));
+
+                // 사용자 정보를 MemoryUserRepository에 저장
+                Repository MemoryUserRepository;
+                repository.addUser(user);
+
+                //index.html로 리다이렉션
+                response302Header(dos, "/index.html");
+            }
+
 
             response200Header(dos, body.length);
             responseBody(dos, body);
@@ -54,6 +81,15 @@ public class RequestHandler implements Runnable{
             dos.writeBytes("HTTP/1.1 200 OK \r\n");
             dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
             dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
+            dos.writeBytes("\r\n");
+        } catch (IOException e) {
+            log.log(Level.SEVERE, e.getMessage());
+        }
+    }
+    private void response302Header(DataOutputStream dos, String path) {
+        try {
+            dos.writeBytes("HTTP/1.1 302 Redirect \r\n");
+            dos.writeBytes("Location: " + path + "\r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());
