@@ -1,6 +1,6 @@
 package webserver;
 
-import HttpRequest.RequestMessage;
+import HttpRequest.HttpRequest;
 import db.MemoryUserRepository;
 import HttpResponse.ResponseHeaderConstants;
 import model.User;
@@ -36,14 +36,17 @@ public class RequestHandler implements Runnable{
 
             String homeUrl = BASE_URL + HOME_URL;
             byte[] body = new byte[0];
-            MemoryUserRepository userRepository = getInstance();
+            MemoryUserRepository db_user = getInstance();
 
-            RequestMessage requestMessage = RequestMessage.from(br);
+            // br로 읽어들인 request 분석
+            HttpRequest httpRequest = HttpRequest.from(br);
 
-            String requestMethod = requestMessage.getStartLine().getMethod();
-            String requestUrl = requestMessage.getStartLine().getUrl();
-            int requestContentLength = requestMessage.getHeader().getContentLength();
-            String cookies = requestMessage.getHeader().getCookie();
+            // request 분석 결과 필요한 정보들
+            String requestMethod = httpRequest.getMethod();
+            String requestUrl = httpRequest.getUrl();
+            int requestContentLength = httpRequest.getContentLength();
+            String cookies = httpRequest.getCookie();
+            String requestBody = httpRequest.getBody();
 
             // 1) 기본값(홈) url 설정
             if (requestMethod.equals("GET") && requestUrl.equals("/")) {
@@ -80,9 +83,9 @@ public class RequestHandler implements Runnable{
 
                 // MemoryUserRepository 객체에 User 저장 및 확인
                 User user = new User(userId, password, name, email);
-                userRepository.addUser(user);
+                db_user.addUser(user);
 
-                Collection<User> allUsers = userRepository.findAll();
+                Collection<User> allUsers = db_user.findAll();
                 for (User storedUser: allUsers) {
                     System.out.println("userId: " + storedUser.getUserId());
                     System.out.println("name: " + storedUser.getName());
@@ -96,7 +99,6 @@ public class RequestHandler implements Runnable{
 
             // 3) POST 방식으로 회원가입 + 4) 302 status code 적용
             if (requestMethod.equals("POST") && requestUrl.equals("/user/signup")) {
-                String requestBody = readData(br, requestContentLength);
                 Map<String, String> queryStringMap = parseQueryParameter(requestBody);
 
                 // 2번이랑 동일 -> 리팩토링할 때 함수로 빼기
@@ -119,9 +121,9 @@ public class RequestHandler implements Runnable{
 
                 // MemoryUserRepository 객체에 User 저장 및 확인
                 User user = new User(userId, password, name, email);
-                userRepository.addUser(user);
+                db_user.addUser(user);
 
-                Collection<User> allUsers = userRepository.findAll();
+                Collection<User> allUsers = db_user.findAll();
                 for (User storedUser: allUsers) {
                     System.out.println("userId: " + storedUser.getUserId());
                     System.out.println("name: " + storedUser.getName());
@@ -135,10 +137,10 @@ public class RequestHandler implements Runnable{
 
             // 5) 로그인
             if (requestMethod.equals("POST") && requestUrl.equals("/user/login")) {
-                String requestBody = readData(br, requestContentLength);
+                System.out.println(requestBody);
                 Map<String, String> queryStringMap = parseQueryParameter(requestBody);
 
-                User user = userRepository.findUserById(queryStringMap.get("userId"));
+                User user = db_user.findUserById(queryStringMap.get("userId"));
                 // 회원인 경우
                 if (user != null) {
                     String cookie = "logined=true";

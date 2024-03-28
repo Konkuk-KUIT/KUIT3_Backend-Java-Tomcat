@@ -3,16 +3,16 @@ package HttpRequest;
 import java.io.BufferedReader;
 import java.io.IOException;
 
-public class RequestHeader {
+public class MessageHeader {
     private int contentLength;
     private String cookie;
 
-    public RequestHeader(int contentLength, String cookie) {
+    public MessageHeader(int contentLength, String cookie) {
         this.contentLength = contentLength;
         this.cookie = cookie;
     }
 
-    public static RequestHeader from(BufferedReader br) throws IOException {
+    public static MessageHeader from(BufferedReader br) throws IOException {
         int contentLength = 0;
         String cookie = "";
 
@@ -24,17 +24,13 @@ public class RequestHeader {
             }
             if (line.startsWith("Content-Length")) {
                 contentLength = Integer.parseInt(line.split(": ")[1]);
+                System.out.println(contentLength);
             }
             if (line.startsWith("Cookie")) {
                 cookie = line;
             }
         }
-        return new RequestHeader(contentLength, cookie);
-    }
-
-    public void setHeader(RequestHeader header) {
-        this.contentLength = header.contentLength;
-        this.cookie = header.cookie;
+        return new MessageHeader(contentLength, cookie);
     }
 
     public int getContentLength() {
