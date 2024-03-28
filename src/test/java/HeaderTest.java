@@ -8,6 +8,6 @@ public class HeaderTest {
     void getHeader() {
         Header header = new Header();
         header.addAttribute(HeaderKey.CONTENT_LENGTH, "100");
-        System.out.println(header.getHeader());
+//        System.out.println(header.getHeader());
     }
 }

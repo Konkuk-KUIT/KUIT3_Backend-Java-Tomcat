@@ -25,11 +25,12 @@ public class Header {
         attributes.put(key.getHeaderKey(), value);
     }
 
-    public String getHeader() {
+    public byte[] getFinalByteHeader() {
         StringBuilder ret = new StringBuilder();
         for (Map.Entry<String,String> attribute : attributes.entrySet()) {
             ret.append(attribute.getKey()).append(": ").append(attribute.getValue()).append("\r\n");
         }
-        return ret.toString();
+        ret.append("\r\n");
+        return ret.toString().getBytes();
     }
 }

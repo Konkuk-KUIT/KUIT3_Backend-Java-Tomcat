@@ -2,36 +2,54 @@ package http;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import structure.Header;
+import structure.HeaderKey;
+import structure.ResponseStartLine;
 
 public class HttpResponse {
+    private final byte[] startLine;
     private final byte[] header;
     private final byte[] body;
 
-    private HttpResponse(byte[] header, byte[] body) {
+    private HttpResponse(byte[] startLine, byte[] header, byte[] body) {
+        this.startLine = startLine;
         this.header = header;
         this.body = body;
     }
 
+    public static HttpResponse ofFile(ResponseStartLine startLine, Header header, String filePath) {
+        byte[] body = readFile(filePath);
+        byte[] byteStartLine = startLine.toByte();
+        header.addAttribute(HeaderKey.CONTENT_LENGTH, Integer.toString(body.length));
+        byte[] byteHeader = header.getFinalByteHeader();
+
+        return new HttpResponse(byteStartLine, byteHeader, body);
+    }
+
+//    public static HttpResponse ofPath(String headerCode, String path) {
+//
+//    }
+
     public static HttpResponse of200HtmlFile(String path) {
         byte[] body = readFile(path);
         byte[] header = get200HtmlResponseHeader(body.length);
-        return new HttpResponse(header, body);
+        return new HttpResponse(header, body, null);
     }
 
     public static HttpResponse of302ResponseHeader(String path) {
         byte[] header = get302ResponseHeader(path);
-        return new HttpResponse(header, new byte[0]);
+        return new HttpResponse(header, new byte[0], null);
     }
 
     public static HttpResponse of302ResponseHeaderWithCookie(String path) {
         byte[] header = get302ResponseHeaderWithCookie(path);
-        return new HttpResponse(header, new byte[0]);
+        return new HttpResponse(header, new byte[0], null);
     }
 
     public static HttpResponse of200CssResponse(String path) {
         byte[] body = readFile(path);
         byte[] header = get200CssResponseHeader(body.length);
-        return new HttpResponse(header, body);
+        return new HttpResponse(header, body, null);
     }
 
     public byte[] getHeader() {
@@ -40,6 +58,10 @@ public class HttpResponse {
 
     public byte[] getBody() {
         return this.body;
+    }
+
+    public byte[] getStartLine() {
+        return this.startLine;
     }
 
     public int getBodyLength() {

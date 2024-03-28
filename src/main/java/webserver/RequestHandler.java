@@ -41,6 +41,7 @@ public class RequestHandler implements Runnable{    // Ran By Thread
 
     private void sendHttpResponse(DataOutputStream dos, HttpResponse httpResponse) {
         try {
+            dos.write(httpResponse.getStartLine());
             dos.write(httpResponse.getHeader());
             dos.write(httpResponse.getBody(), 0, httpResponse.getBodyLength());
             dos.flush();
