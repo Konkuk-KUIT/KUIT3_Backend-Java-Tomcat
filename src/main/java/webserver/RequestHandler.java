@@ -183,6 +183,12 @@ public class RequestHandler implements Runnable{
                 response302Header(dos, "/user/login.html");
             }
 
+            // 7) .css로 끝나는 url의 경우
+            if (requestUrl.endsWith(".css")) {
+                body = Files.readAllBytes(Paths.get(BASE_URL + requestUrl));
+                response200HeaderWithCss(dos);
+            }
+
             response200Header(dos, body.length);
             responseBody(dos, body);
 
@@ -196,6 +202,16 @@ public class RequestHandler implements Runnable{
             dos.writeBytes("HTTP/1.1 200 OK \r\n");
             dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
             dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
+            dos.writeBytes("\r\n");
+        } catch (IOException e) {
+            log.log(Level.SEVERE, e.getMessage());
+        }
+    }
+
+    private void response200HeaderWithCss(DataOutputStream dos) {
+        try {
+            dos.writeBytes("HTTP/1.1 200 OK \r\n");
+            dos.writeBytes("Content-Type: text/css;charset=utf-8\r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());
