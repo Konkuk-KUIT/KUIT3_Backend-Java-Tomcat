@@ -3,7 +3,10 @@ package controller;
 import http.HttpRequest;
 import http.HttpResponse;
 import java.io.IOException;
+import structure.ContentType;
+import structure.Header;
 import structure.HeaderKey;
+import structure.ResponseStartLine;
 
 public class UserController implements Controller{
     @Override
@@ -24,11 +27,17 @@ public class UserController implements Controller{
     }
 
     private HttpResponse showUserListResponse() {
-        return HttpResponse.of200HtmlFile("/Users/tony/IdeaProjects/KUIT3_Backend-Java-Tomcat/webapp/user/list.html");
+        ResponseStartLine startLine = ResponseStartLine.ofResponseCode("200");
+        Header header = new Header();
+        header.addAttribute(HeaderKey.CONTENT_TYPE, ContentType.HTML.getTypeValue());
+
+        return HttpResponse.ofFile(startLine, header, "/Users/tony/IdeaProjects/KUIT3_Backend-Java-Tomcat/webapp/user/list.html");
     }
 
     private HttpResponse redirectToLogin() {
-        System.out.println("REDIRECTION CALLED");
-        return HttpResponse.of302ResponseHeader("/user/login");
+        ResponseStartLine startLine = ResponseStartLine.ofResponseCode("302");
+        Header header = new Header();
+
+        return HttpResponse.ofPath(startLine, header, "/user/login");
     }
 }

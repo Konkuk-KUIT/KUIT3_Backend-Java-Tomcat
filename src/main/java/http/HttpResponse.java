@@ -89,13 +89,6 @@ public class HttpResponse {
         return header.getBytes();
     }
 
-    private static byte[] get302ResponseHeaderWithCookie(String path) {     // 뀨? 쿠키? 확인 안도 // set cookie는 내가 따로 추가한거
-        String header = "HTTP/1.1 302 OK \r\n" + "Set-Cookie: logined=true \r\n" + "Location: " + path + "\r\n"
-                + "\r\n" + "\r\n";
-        System.out.println("내가 만든 쿠키");
-        return header.getBytes();
-    }
-
     private static byte[] get200CssResponseHeader(int contentLength) {
         String header = "HTTP/1.1 200 OK \r\n" + "Content-Type: text/css\r\n" + "Content-Length: " +
                 contentLength + "\r\n" + "\r\n";
