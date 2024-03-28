@@ -17,6 +17,7 @@ import java.util.logging.Logger;
 import static http.util.HttpRequestUtils.parseQueryParameter;
 import static webserver.HttpHeader.*;
 import static webserver.Url.*;
+import static webserver.HttpMethod.*;
 
 
 public class RequestHandler implements Runnable{
@@ -79,7 +80,7 @@ public class RequestHandler implements Runnable{
 
 
             //서버에서 요청이 GET이고 .html로 끝난다면
-            if (method.equals("GET") && url.endsWith(".html")) {
+            if (method.equals(Get.getMethod()) && url.endsWith(".html")) {
                 body = Files.readAllBytes(Paths.get(ROOT_URL.getUrl() + url));
             }
 
@@ -90,19 +91,18 @@ public class RequestHandler implements Runnable{
 
 
             //회원가입 submit제출했을 시
-            if (url.equals("/user/signup") ) {
+            if (url.equals(USER_SIGNUP.getUrl()) ) {
                 String queryString = IOUtils.readData(br, requestContentLength);
                 Map<String, String> queryParameter = parseQueryParameter(queryString);
                 User user = new User(queryParameter.get("userId"), queryParameter.get("password"), queryParameter.get("name"), queryParameter.get("email"));
                 repository.addUser(user);
-                System.out.println("user : "+user.getName());
                 response302Header(dos,HOME_URL.getUrl());
 
                 return;
             }
 
             //요구사항 5번
-            if (url.equals("/user/login")) {
+            if (url.equals(LOGIN_URL.getUrl())) {
                 String queryString = IOUtils.readData(br, requestContentLength);
                 Map<String, String> queryParameter = parseQueryParameter(queryString);
                 User user = repository.findUserById(queryParameter.get("userId"));
@@ -111,16 +111,16 @@ public class RequestHandler implements Runnable{
             }
 
             //요구사항6번
-            if (url.equals("/user/userList")) {
+            if (url.equals(USER_LIST.getUrl())) {
                 if (!cookie.equals("logined=true")) {
-                    response302Header(dos,LOGIN_URL.getUrl());
+                    response302Header(dos, LOGIN_URL_HTML.getUrl());
                     return;
                 }
                 body = Files.readAllBytes(Paths.get(ROOT_URL.getUrl() + LIST_URL.getUrl()));
             }
 
             //요구사항7번
-            if (method.equals("GET") && url.endsWith(".css")) {
+            if (method.equals(Get.getMethod()) && url.endsWith(".css")) {
                 body = Files.readAllBytes(Paths.get(ROOT_URL.getUrl() + url));
                 response200HeaderWithCss(dos, body.length);
                 responseBody(dos, body);
