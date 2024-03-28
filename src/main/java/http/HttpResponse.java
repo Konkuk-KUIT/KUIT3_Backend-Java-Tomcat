@@ -26,9 +26,14 @@ public class HttpResponse {
         return new HttpResponse(byteStartLine, byteHeader, body);
     }
 
-//    public static HttpResponse ofPath(String headerCode, String path) {
-//
-//    }
+    public static HttpResponse ofPath(ResponseStartLine startLine, Header header, String path) {
+        byte[] body = new byte[0];
+        byte[] byteStartLine = startLine.toByte();
+        header.addAttribute(HeaderKey.LOCATION, path);
+        byte[] byteHeader = header.getFinalByteHeader();
+
+        return new HttpResponse(byteStartLine, byteHeader, body);
+    }
 
     public static HttpResponse of200HtmlFile(String path) {
         byte[] body = readFile(path);
@@ -38,11 +43,6 @@ public class HttpResponse {
 
     public static HttpResponse of302ResponseHeader(String path) {
         byte[] header = get302ResponseHeader(path);
-        return new HttpResponse(header, new byte[0], null);
-    }
-
-    public static HttpResponse of302ResponseHeaderWithCookie(String path) {
-        byte[] header = get302ResponseHeaderWithCookie(path);
         return new HttpResponse(header, new byte[0], null);
     }
 

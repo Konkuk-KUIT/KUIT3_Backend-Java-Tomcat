@@ -7,6 +7,10 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
 import service.UserService;
+import structure.ContentType;
+import structure.Header;
+import structure.HeaderKey;
+import structure.ResponseStartLine;
 
 public class LoginController implements Controller{
 
@@ -24,19 +28,24 @@ public class LoginController implements Controller{
     }
 
     private HttpResponse httpGetMethodLogic(HttpRequest httpRequest) throws RuntimeException {
+        ResponseStartLine startLine = ResponseStartLine.ofResponseCode("200");
+        Header header = new Header();
+        header.addAttribute(HeaderKey.CONTENT_TYPE, ContentType.HTML.getTypeValue());
         if(isLoggedInFalse(httpRequest)) {
-            return HttpResponse.of200HtmlFile("/Users/tony/IdeaProjects/KUIT3_Backend-Java-Tomcat/webapp/user/login_failed.html");
+            return HttpResponse.ofFile(startLine, header, "/Users/tony/IdeaProjects/KUIT3_Backend-Java-Tomcat/webapp/user/login_failed.html");
         }
-        return HttpResponse.of200HtmlFile("/Users/tony/IdeaProjects/KUIT3_Backend-Java-Tomcat/webapp/user/login.html");
+        return HttpResponse.ofFile(startLine, header, "/Users/tony/IdeaProjects/KUIT3_Backend-Java-Tomcat/webapp/user/login.html");
     }
 
     private HttpResponse httpPostMethodLogic(HttpRequest httpRequest) throws IOException {    // TODO: 똥코드
         Map<String, String> loginData = httpRequest.parseBodyQueryParameter();
-
+        ResponseStartLine responseStartLine = ResponseStartLine.ofResponseCode("302");
+        Header header = new Header();
         if(userService.login(loginData).isPresent()) {
-            return HttpResponse.of302ResponseHeaderWithCookie("/");
+            header.addAttribute(HeaderKey.SET_COOKIE, "login=true");
+            return HttpResponse.ofPath(responseStartLine, header, "/");
         }
-        return HttpResponse.of302ResponseHeader("/user/login?loggedIn=false");
+        return HttpResponse.ofPath(responseStartLine, header, "/user/login?loggedIn=false");
     }
 
     private boolean isLoggedInFalse(HttpRequest httpRequest) {
