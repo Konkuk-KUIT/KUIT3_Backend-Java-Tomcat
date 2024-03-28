@@ -2,6 +2,9 @@ package webserver;
 
 import java.io.*;
 import java.net.Socket;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,10 +23,18 @@ public class RequestHandler implements Runnable{
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
             DataOutputStream dos = new DataOutputStream(out);
 
-            byte[] body = "Hello World".getBytes();
-            response200Header(dos, body.length);
-            responseBody(dos, body);
-
+            String startLine = br.readLine();
+            String[] startLines = startLine.split(" ");
+            String method = startLines[0]; //GET POST ...
+            String url = startLines[1]; ///login.html /index.html ...
+            if (url.equals("/index.html") || url.equals("/")) {
+                //index.html읽어서 byte[]로 만들기
+                //상대경로
+                File indexFile = new File("webapp/index.html");
+                byte[] body = Files.readAllBytes(indexFile.toPath());
+                response200Header(dos, body.length);
+                responseBody(dos, body);
+            }
         } catch (IOException e) {
             log.log(Level.SEVERE,e.getMessage());
         }
