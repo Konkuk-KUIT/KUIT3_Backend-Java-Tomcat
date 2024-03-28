@@ -43,12 +43,29 @@ public class RequestHandler implements Runnable{
 
             byte[] body=new byte[0];
 
+            int contentLength = 0;
+            String cookie = "";
+            while (true) {
+                final String line = br.readLine();
+                if (line.equals("")) {
+                    break;
+                }
+                // header info
+                if (line.startsWith("Content-Length")) {
+                    contentLength = Integer.parseInt(line.split(": ")[1]);
+                }
+
+                if (line.startsWith("Cookie")) {
+                    cookie = line.split(": ")[1];
+                }
+            }
+
             //1-1 :  index.html 반환하기
             if (method.equals("GET")&& url.endsWith(".html")) {
-                body = Files.readAllBytes(Paths.get(Paths.get("./webapp"+ url).toUri()));
+                body = Files.readAllBytes(Paths.get("./webapp"+ url));
             }
             if (url.equals("/")) {
-                body = Files.readAllBytes(Path.of("./webapp/index.html"));
+                body = Files.readAllBytes(Paths.get("./webapp/index.html"));
             }
 
             //1-2 : GET 방식으로 회원가입하기
@@ -72,7 +89,7 @@ public class RequestHandler implements Runnable{
             }
 
             //1-3 : POST 방식으로 회원가입하기
-            int contentLength = 0;
+
             if(url.equals("/user/signup")){
                 String queryString = IOUtils.readData(br, contentLength);
                 Map<String, String> queryParameters = parseQueryParameter(queryString);
@@ -111,11 +128,39 @@ public class RequestHandler implements Runnable{
                 }
             }
 
+            System.out.println(cookie);
+            if (url.equals("/user/userList")) {
+                if (!cookie.contains("logined=true")) {
+                    response302Header(dos,"/user/login.html");
+                    return;
+                }
+                body = Files.readAllBytes(Paths.get("./webapp/user/list.html"));
+            }
+
+            //1-7 : CSS 출력
+            if (method.equals("GET") && url.endsWith(".css")) {
+                body = Files.readAllBytes(Paths.get("./webapp" + url));
+                response200HeaderWithCss(dos, body.length);
+                responseBody(dos, body);
+            }
+
             response200Header(dos, body.length);
             responseBody(dos, body);
 
         } catch (IOException e) {
             log.log(Level.SEVERE,e.getMessage());
+        }
+    }
+
+    private void response200HeaderWithCss(DataOutputStream dos, int lengthOfBodyContent) {
+        try {
+            dos.writeBytes("HTTP/1.1 200 OK \r\n");
+            dos.writeBytes("Content-Type: text/css;charset=utf-8\r\n");
+            dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
+            dos.writeBytes("\r\n");
+            dos.flush();
+        } catch (IOException e) {
+            log.log(Level.SEVERE, e.getMessage());
         }
     }
 
