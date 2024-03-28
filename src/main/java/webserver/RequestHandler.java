@@ -4,6 +4,7 @@ import db.MemoryUserRepository;
 import db.Repository;
 import http.util.IOUtils;
 import model.User;
+import webserver.http.HttpRequest;
 
 import java.io.*;
 import java.net.Socket;
@@ -15,9 +16,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static http.util.HttpRequestUtils.parseQueryParameter;
-import static webserver.HttpHeader.*;
+import static http.message.HttpHeader.*;
 import static webserver.Url.*;
-import static webserver.HttpMethod.*;
+import static http.message.HttpMethod.*;
 import static webserver.UserQueryKey.*;
 
 
@@ -49,18 +50,21 @@ public class RequestHandler implements Runnable{
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
             DataOutputStream dos = new DataOutputStream(out);
 
+
+            HttpRequest httpRequest = HttpRequest.from(br);
+
             byte[] body = new byte[0];
 
 
 
             //서버로 부터 오는 Header 분석하는 부분 //////////
-            String startLine = br.readLine();
-            String[] startLines = startLine.split(" ");
-            //startLines : ["GET", "/", "HTTP/1.1"]
-            String method = startLines[0];
-            //method : "GET"
-            String url = startLines[1];
-            //url : "/"
+//            String startLine = br.readLine();
+//            String[] startLines = startLine.split(" ");
+//            //startLines : ["GET", "/", "HTTP/1.1"]
+//            String method = startLines[0];
+//            //method : "GET"
+//            String url = startLines[1];
+//            //url : "/"
 
             int requestContentLength = 0;
             String cookie = "";
@@ -81,52 +85,52 @@ public class RequestHandler implements Runnable{
 
 
             //서버에서 요청이 GET이고 .html로 끝난다면
-            if (method.equals(Get.getMethod()) && url.endsWith(".html")) {
-                body = Files.readAllBytes(Paths.get(ROOT_URL.getUrl() + url));
+            if (httpRequest.getMethod().equals(Get.getMethod()) && httpRequest.getUrl().endsWith(".html")) {
+                body = Files.readAllBytes(Paths.get(ROOT_URL.getUrl() + httpRequest.getUrl()));
             }
 
-            if (url.equals("/")) {
+            if (httpRequest.getUrl().equals("/")) {
                 body = Files.readAllBytes(homePath);
             }
 
 
 
             //회원가입 submit제출했을 시
-            if (url.equals(USER_SIGNUP.getUrl()) ) {
-                String queryString = IOUtils.readData(br, requestContentLength);
-                Map<String, String> queryParameter = parseQueryParameter(queryString);
-                User user = new User(queryParameter.get(USER_ID.getKey()), queryParameter.get(USER_PASSWORD.getKey()), queryParameter.get(USER_NAME.getKey()), queryParameter.get(USER_EMAIL.getKey()));
-                repository.addUser(user);
-                response302Header(dos,HOME_URL.getUrl());
-
-                return;
-            }
+//            if (url.equals(USER_SIGNUP.getUrl()) ) {
+//                String queryString = IOUtils.readData(br, requestContentLength);
+//                Map<String, String> queryParameter = parseQueryParameter(queryString);
+//                User user = new User(queryParameter.get(USER_ID.getKey()), queryParameter.get(USER_PASSWORD.getKey()), queryParameter.get(USER_NAME.getKey()), queryParameter.get(USER_EMAIL.getKey()));
+//                repository.addUser(user);
+//                response302Header(dos,HOME_URL.getUrl());
+//
+//                return;
+//            }
 
             //요구사항 5번
-            if (url.equals(LOGIN_URL.getUrl())) {
-                String queryString = IOUtils.readData(br, requestContentLength);
-                Map<String, String> queryParameter = parseQueryParameter(queryString);
-                User user = repository.findUserById(queryParameter.get(USER_ID.getKey()));
-                login(dos, queryParameter, user);
-                return;
-            }
+//            if (url.equals(LOGIN_URL.getUrl())) {
+//                String queryString = IOUtils.readData(br, requestContentLength);
+//                Map<String, String> queryParameter = parseQueryParameter(queryString);
+//                User user = repository.findUserById(queryParameter.get(USER_ID.getKey()));
+//                login(dos, queryParameter, user);
+//                return;
+//            }
 
             //요구사항6번
-            if (url.equals(USER_LIST.getUrl())) {
-                if (!cookie.equals("logined=true")) {
-                    response302Header(dos, LOGIN_URL_HTML.getUrl());
-                    return;
-                }
-                body = Files.readAllBytes(Paths.get(ROOT_URL.getUrl() + LIST_URL.getUrl()));
-            }
+//            if (url.equals(USER_LIST.getUrl())) {
+//                if (!cookie.equals("logined=true")) {
+//                    response302Header(dos, LOGIN_URL_HTML.getUrl());
+//                    return;
+//                }
+//                body = Files.readAllBytes(Paths.get(ROOT_URL.getUrl() + LIST_URL.getUrl()));
+//            }
 
             //요구사항7번
-            if (method.equals(Get.getMethod()) && url.endsWith(".css")) {
-                body = Files.readAllBytes(Paths.get(ROOT_URL.getUrl() + url));
-                response200HeaderWithCss(dos, body.length);
-                responseBody(dos, body);
-                return;
-            }
+//            if (method.equals(Get.getMethod()) && url.endsWith(".css")) {
+//                body = Files.readAllBytes(Paths.get(ROOT_URL.getUrl() + url));
+//                response200HeaderWithCss(dos, body.length);
+//                responseBody(dos, body);
+//                return;
+//            }
 
 
 

@@ -1,4 +1,4 @@
-package webserver;
+package http.message;
 
 public enum HttpHeader {
     HTTP200 ("HTTP/1.1 200 OK \r\n"),
