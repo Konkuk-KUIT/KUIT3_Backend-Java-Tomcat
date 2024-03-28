@@ -6,6 +6,10 @@ import http.HttpResponse;
 import java.io.IOException;
 import java.util.Map;
 import service.UserService;
+import structure.ContentType;
+import structure.Header;
+import structure.HeaderKey;
+import structure.ResponseStartLine;
 
 public class SignUpController implements Controller {   // GET, POST 둘다 응답하는 친구 입니다.
 
@@ -23,7 +27,10 @@ public class SignUpController implements Controller {   // GET, POST 둘다 응�
     }
 
     private HttpResponse httpGetMethodLogic() throws RuntimeException {
-        return HttpResponse.of200HtmlFile("/Users/tony/IdeaProjects/KUIT3_Backend-Java-Tomcat/webapp/user/form.html");
+        ResponseStartLine startLine = ResponseStartLine.ofResponseCode("200");
+        Header header = new Header();
+        header.addAttribute(HeaderKey.CONTENT_TYPE, ContentType.HTML.getTypeValue());
+        return HttpResponse.ofFile(startLine, header, "/Users/tony/IdeaProjects/KUIT3_Backend-Java-Tomcat/webapp/user/form.html");
     }
 
     private HttpResponse httpPostMethodLogic(HttpRequest httpRequest) throws IOException, IllegalArgumentException {    // TODO: 똥코드
@@ -31,6 +38,8 @@ public class SignUpController implements Controller {   // GET, POST 둘다 응�
 
         userService.signUpUser(signUpData);
 
-        return HttpResponse.of302ResponseHeader("/");
+        ResponseStartLine startLine = ResponseStartLine.ofResponseCode("302");
+        Header header = new Header();
+        return HttpResponse.ofPath(startLine, header, "/");
     }
 }
