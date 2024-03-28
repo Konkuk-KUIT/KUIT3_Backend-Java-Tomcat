@@ -68,7 +68,7 @@ public class RequestHandler implements Runnable {
             }
 
             // 요구사항 2,3,4번
-            if (url.startsWith("/user/signup")) {
+            if (url.equals("/user/signup")) {
                 String queryString = makeQueryStringByMethod(method, br, requestContentLength, url);
                 Map<String, String> elements = HttpRequestUtils.parseQueryParameter(queryString);
                 repository.addUser(new User(elements.get("userId"), elements.get("password"), elements.get("name"), elements.get("email")));
@@ -78,13 +78,13 @@ public class RequestHandler implements Runnable {
             }
 
             // 요구사항 5번
-            if (url.startsWith("/user/login") && method.equals("POST")) {
+            if (method.equals("POST") && url.equals("/user/login")) {
                 String queryString = IOUtils.readData(br, requestContentLength);
                 Map<String, String> elements = HttpRequestUtils.parseQueryParameter(queryString);
                 User user = repository.findUserById(elements.get("userId"));
 
                 // 로그인 성공
-                if(user != null && user.getPassword().equals(elements.get("password"))){
+                if (user != null && user.getPassword().equals(elements.get("password"))) {
                     response302HeaderWithCookie(dos, HOME_URL);
                     return;
                 }
@@ -112,6 +112,9 @@ public class RequestHandler implements Runnable {
                 return;
             }
 
+            if (body.length == 0) {
+                body = "Sorry, This page doesn't exist.".getBytes();
+            }
             response200Header(dos, body.length);
             responseBody(dos, body);
 
