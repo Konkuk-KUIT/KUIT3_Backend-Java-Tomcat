@@ -167,20 +167,27 @@ public class RequestHandler implements Runnable{
                 // 리스폰스 헤더로부터 쿠키 가져와서 -> logined=true일 때에만 user list 화면으로 / 로그인 아니면 login.html으로 redirect
                 if(!cookies.isEmpty()) {
                     String[] cookieParts = cookies.split(":");
-                    if (cookieParts.length >= 2) {
-                        String[] cookieValue = cookieParts[1].split(";");
-                        // 쿠키 값 확인
-                        for (String cookie : cookieValue) {
-                            if (cookie.trim().equals("logined=true")) {
-                                System.out.println("헤더에 logined=true 쿠키 있는 경우");
-                                response302Header(dos, "/user/list.html");
-                                return;
-                            }
+                    String[] cookieValues = cookieParts[1].split(";");
+                    boolean isLogined = false;
+                    // 쿠키 값 확인
+                    for (String cookie : cookieValues) {
+                        if (cookie.trim().equals("logined=true")) {
+                            isLogined = true;
+                            break;
                         }
                     }
+                    if (isLogined) {
+                        System.out.println("로그인한 사용자인 경우");
+                        response200Header(dos, body.length);
+                    } else {
+                        System.out.println("쿠키는 있지만 로그인하지 않은 경우");
+                        response302Header(dos, "/user/login.html");
+                    }
                 }
-                System.out.println("헤더에 쿠키 없는 경우");
-                response302Header(dos, "/user/login.html");
+                else {
+                    System.out.println("쿠키 없음");
+                    response302Header(dos, "/user/login.html");
+                }
             }
 
             // 7) .css로 끝나는 url의 경우
