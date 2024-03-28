@@ -40,7 +40,7 @@ public class RequestHandler implements Runnable{
 
             byte[] body=new byte[0];
 
-            //1-1
+            //1-1 :  index.html 반환하기
             if (method.equals("GET")&& url.endsWith(".html")) {
                 body = Files.readAllBytes(Paths.get(Paths.get("./webapp"+ url).toUri()));
             }
@@ -48,8 +48,7 @@ public class RequestHandler implements Runnable{
                 body = Files.readAllBytes(Path.of("./webapp/index.html"));
             }
 
-            //1-2
-
+            //1-2 : GET 방식으로 회원가입하기
             if(url.contains("/user/signup") && method.equals("GET")){
                 // 쿼리 스트링 정보를 파싱
                 String[] str = url.split("\\?");
@@ -67,6 +66,25 @@ public class RequestHandler implements Runnable{
                 //index.html로 리다이렉션
                 response302Header(dos, "/index.html");
             }
+
+            //1-3 : POST 방식으로 회원가입하기
+            int contentLength = 0;
+            if(url.equals("/user/signup")){
+                String queryString = IOUtils.readData(br, contentLength);
+                Map<String, String> queryParameters = HttpRequestUtils.parseQueryParameter(queryString);
+
+                // User 생성
+                User user = new User(queryParameters.get("userId"), queryParameters.get("password"),
+                        queryParameters.get("name"), queryParameters.get("email"));
+
+                // 사용자 정보를 MemoryUserRepository에 저장
+                Repository MemoryUserRepository;
+                repository.addUser(user);
+
+                //index.html로 리다이렉션
+                response302Header(dos, "/index.html");
+            }
+
             response200Header(dos, body.length);
             responseBody(dos, body);
 
