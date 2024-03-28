@@ -79,21 +79,18 @@ public class RequestHandler implements Runnable {
 
             // 요구사항 5번
             if (url.startsWith("/user/login") && method.equals("POST")) {
-                Map<String, String> elements = HttpRequestUtils.parseQueryParameter(IOUtils.readData(br, requestContentLength));
-                try {
-                    User user = repository.findUserById(elements.get("userId"));
-                    // 비밀번호가 틀린 경우
-                    if (!user.getPassword().equals(elements.get("password"))) {
-                        response302Header(dos, LOGIN_FAILED_URL);
-                        return;
-                    }
+                String queryString = IOUtils.readData(br, requestContentLength);
+                Map<String, String> elements = HttpRequestUtils.parseQueryParameter(queryString);
+                User user = repository.findUserById(elements.get("userId"));
+
+                // 로그인 성공
+                if(user != null && user.getPassword().equals(elements.get("password"))){
                     response302HeaderWithCookie(dos, HOME_URL);
                     return;
-                } catch (NullPointerException e) {
-                    // 해당 아이디가 없는 경우
-                    response302Header(dos, LOGIN_FAILED_URL);
-                    return;
                 }
+                // 로그인 실패
+                response302Header(dos, LOGIN_FAILED_URL);
+                return;
             }
 
             // 요구사항 6번
