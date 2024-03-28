@@ -18,6 +18,7 @@ import static http.util.HttpRequestUtils.parseQueryParameter;
 import static webserver.HttpHeader.*;
 import static webserver.Url.*;
 import static webserver.HttpMethod.*;
+import static webserver.UserQueryKey.*;
 
 
 public class RequestHandler implements Runnable{
@@ -94,7 +95,7 @@ public class RequestHandler implements Runnable{
             if (url.equals(USER_SIGNUP.getUrl()) ) {
                 String queryString = IOUtils.readData(br, requestContentLength);
                 Map<String, String> queryParameter = parseQueryParameter(queryString);
-                User user = new User(queryParameter.get("userId"), queryParameter.get("password"), queryParameter.get("name"), queryParameter.get("email"));
+                User user = new User(queryParameter.get(USER_ID.getKey()), queryParameter.get(USER_PASSWORD.getKey()), queryParameter.get(USER_NAME.getKey()), queryParameter.get(USER_EMAIL.getKey()));
                 repository.addUser(user);
                 response302Header(dos,HOME_URL.getUrl());
 
@@ -105,7 +106,7 @@ public class RequestHandler implements Runnable{
             if (url.equals(LOGIN_URL.getUrl())) {
                 String queryString = IOUtils.readData(br, requestContentLength);
                 Map<String, String> queryParameter = parseQueryParameter(queryString);
-                User user = repository.findUserById(queryParameter.get("userId"));
+                User user = repository.findUserById(queryParameter.get(USER_ID.getKey()));
                 login(dos, queryParameter, user);
                 return;
             }
@@ -149,7 +150,7 @@ public class RequestHandler implements Runnable{
     }
 
     private void login(DataOutputStream dos, Map<String, String> queryParameter, User user) {
-        if (user != null && user.getPassword().equals(queryParameter.get("password"))) {
+        if (user != null && user.getPassword().equals(queryParameter.get(USER_PASSWORD.getKey()))) {
             response302HeaderWithCookie(dos,HOME_URL.getUrl());
             return;
         }
