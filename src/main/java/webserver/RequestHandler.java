@@ -45,16 +45,17 @@ public class RequestHandler implements Runnable{
                 body = Files.readAllBytes(Paths.get(Paths.get("./webapp"+ url).toUri()));
             }
             if (url.equals("/")) {
-                body = Files.readAllBytes(Path.of("/index.html"));
+                body = Files.readAllBytes(Path.of("./webapp/index.html"));
             }
 
             //1-2
-            int idx = url.indexOf('?');
-            String queryString = idx > -1 ? url.substring(idx + 1) : "";
+
             if(url.contains("/user/signup") && method.equals("GET")){
                 // 쿼리 스트링 정보를 파싱
-                Map<String, String> queryParameters = HttpRequestUtils.parseQueryParameter(queryString);
+                String[] str = url.split("\\?");
+                String queryString = str[1];
 
+                Map<String, String> queryParameters = HttpRequestUtils.parseQueryParameter(queryString);
                 // User 생성
                 User user = new User(queryParameters.get("userId"), queryParameters.get("password"),
                         queryParameters.get("name"), queryParameters.get("email"));
@@ -66,8 +67,6 @@ public class RequestHandler implements Runnable{
                 //index.html로 리다이렉션
                 response302Header(dos, "/index.html");
             }
-
-
             response200Header(dos, body.length);
             responseBody(dos, body);
 
