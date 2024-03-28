@@ -3,11 +3,18 @@ package controller;
 import http.HttpRequest;
 import http.HttpResponse;
 import java.io.IOException;
+import structure.ContentType;
+import structure.Header;
+import structure.HeaderKey;
+import structure.ResponseStartLine;
 
 public class CssController implements Controller{
     @Override
     public HttpResponse runLogic(HttpRequest httpRequest) throws IOException {
-        System.out.println("CSS CONTROLLER CALL");
-        return HttpResponse.of200CssResponse("/Users/tony/IdeaProjects/KUIT3_Backend-Java-Tomcat/webapp/css/styles.css");
+        ResponseStartLine startLine = ResponseStartLine.ofResponseCode("200");
+        Header header = new Header();
+        header.addAttribute(HeaderKey.CONTENT_TYPE, ContentType.CSS.getTypeValue());
+
+        return HttpResponse.ofFile(startLine, header, "/Users/tony/IdeaProjects/KUIT3_Backend-Java-Tomcat/webapp/css/styles.css");
     }
 }

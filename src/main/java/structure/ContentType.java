@@ -1,7 +1,8 @@
 package structure;
 
 public enum ContentType {
-    HTML("text/html;charset=utf-8");
+    HTML("text/html;charset=utf-8"),
+    CSS("text/css");
 
     private final String typeValue;
 
