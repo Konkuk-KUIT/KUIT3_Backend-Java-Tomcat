@@ -18,7 +18,6 @@ public class RequestHandler implements Runnable {
     private final Socket connection;
     private static final Logger log = Logger.getLogger(RequestHandler.class.getName());
     private static final String ROOT_URL = "./webapp";
-    private static final String LIST_URL = "/user/list.html";
 
     private final Repository repository;
 
@@ -26,9 +25,6 @@ public class RequestHandler implements Runnable {
         this.connection = connection;
         this.repository = MemoryUserRepository.getInstance();
     }
-
-
-
 
     @Override
     public void run() {
@@ -54,8 +50,6 @@ public class RequestHandler implements Runnable {
                 responseBody(dos, body);
                 return;
             }
-
-
 
             // GET 요청 처리
             if ("GET".equals(method)) {
@@ -104,6 +98,16 @@ public class RequestHandler implements Runnable {
                             response200Header(dos, body.length);
                             responseBody(dos, body);
                         } else{
+                            byte[] notFoundBody = "404 Not Found".getBytes();
+                            response404Header(dos, notFoundBody.length);
+                            responseBody(dos, notFoundBody);
+                        }
+                    } else {
+                        body = Files.readAllBytes(Paths.get("webapp/user/login.html"));
+                        if (body != null) {
+                            response200Header(dos, body.length);
+                            responseBody(dos, body);
+                        } else {
                             byte[] notFoundBody = "404 Not Found".getBytes();
                             response404Header(dos, notFoundBody.length);
                             responseBody(dos, notFoundBody);
@@ -158,6 +162,7 @@ public class RequestHandler implements Runnable {
 
                     String requestBody = IOUtils.readData(br, requestContentLength);
                     System.out.println("로그인 정보 읽어오기");
+                    System.out.println("requestBody = " + requestBody);
                     // 아이디, 비번 파싱
                     Map<String, String> bodyData = HttpRequestUtils.parseQueryParameter(requestBody);
                     String userId = bodyData.get("userId");
