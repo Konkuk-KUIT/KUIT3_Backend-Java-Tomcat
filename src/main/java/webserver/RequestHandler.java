@@ -63,6 +63,7 @@ public class RequestHandler implements Runnable{
                 Repository MemoryUserRepository;
                 repository.addUser(user);
 
+                //1-4 : 302 status code 적용
                 //index.html로 리다이렉션
                 response302Header(dos, "/index.html");
             }
@@ -81,6 +82,7 @@ public class RequestHandler implements Runnable{
                 Repository MemoryUserRepository;
                 repository.addUser(user);
 
+                //1-4 : 302 status code 적용
                 //index.html로 리다이렉션
                 response302Header(dos, "/index.html");
             }
