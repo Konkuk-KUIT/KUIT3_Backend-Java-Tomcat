@@ -1,6 +1,7 @@
 package webserver;
 
 import db.MemoryUserRepository;
+import domain.HttpResponse;
 import model.User;
 
 import java.io.*;
@@ -206,8 +207,8 @@ public class RequestHandler implements Runnable{
 
     private void response200Header(DataOutputStream dos, int lengthOfBodyContent) {
         try {
-            dos.writeBytes("HTTP/1.1 200 OK \r\n");
-            dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
+            dos.writeBytes(HttpResponse.START_LINE_200.getValue());
+            dos.writeBytes(HttpResponse.CONTENT_TYPE_HTML.getValue());
             dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
@@ -217,8 +218,8 @@ public class RequestHandler implements Runnable{
 
     private void response200HeaderWithCss(DataOutputStream dos) {
         try {
-            dos.writeBytes("HTTP/1.1 200 OK \r\n");
-            dos.writeBytes("Content-Type: text/css;charset=utf-8\r\n");
+            dos.writeBytes(HttpResponse.START_LINE_200.getValue());
+            dos.writeBytes(HttpResponse.CONTENT_TYPE_CSS.getValue());
             dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());
@@ -227,7 +228,7 @@ public class RequestHandler implements Runnable{
 
     private void response302Header(DataOutputStream dos, String path) {
         try {
-            dos.writeBytes("HTTP/1.1 302 Found \r\n");
+            dos.writeBytes(HttpResponse.START_LINE_302.getValue());
             dos.writeBytes("Location: " + path + "\r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
@@ -237,7 +238,7 @@ public class RequestHandler implements Runnable{
 
     private void response302HeaderWithCookie(DataOutputStream dos, String path, String cookie) {
         try {
-            dos.writeBytes("HTTP/1.1 302 Found \r\n");
+            dos.writeBytes(HttpResponse.START_LINE_302.getValue());
             dos.writeBytes("Location: " + path + "\r\n");
             dos.writeBytes("Set-Cookie: " + cookie + "; Path=" + path + "\r\n");
             dos.writeBytes("\r\n");
