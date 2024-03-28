@@ -5,6 +5,8 @@ import db.Repository;
 import http.util.HttpRequestUtils;
 import http.util.IOUtils;
 import model.User;
+import util.HttpMethod;
+import util.URL;
 
 import java.io.*;
 import java.net.Socket;
@@ -17,12 +19,6 @@ import java.util.logging.Logger;
 public class RequestHandler implements Runnable {
     Socket connection;
     private static final Logger log = Logger.getLogger(RequestHandler.class.getName());
-    private static final String ROOT_URL = "./webapp";
-    private static final String HOME_URL = "/index.html";
-    private static final String LOGIN_FAILED_URL = "/user/login_failed.html";
-    private static final String LOGIN_URL = "/user/login.html";
-    private static final String LIST_URL = "/user/list.html";
-
     private final Repository repository;
 
     public RequestHandler(Socket connection) {
@@ -60,11 +56,11 @@ public class RequestHandler implements Runnable {
 
             // 요구사항 1번
             if (url.equals("/")) {
-                body = Files.readAllBytes(Paths.get(ROOT_URL + HOME_URL));
+                body = Files.readAllBytes(Paths.get(URL.ROOT_URL.value() + URL.HOME_URL.value()));
             }
             // url 에 맞는 웹페이지 반환
-            if (method.equals("GET") && url.endsWith(".html")) {
-                body = Files.readAllBytes(Paths.get(ROOT_URL + url));
+            if (method.equals(HttpMethod.GET.value()) && url.endsWith(".html")) {
+                body = Files.readAllBytes(Paths.get(URL.ROOT_URL.value() + url));
             }
 
             // 요구사항 2,3,4번
@@ -73,23 +69,23 @@ public class RequestHandler implements Runnable {
                 Map<String, String> elements = HttpRequestUtils.parseQueryParameter(queryString);
                 repository.addUser(new User(elements.get("userId"), elements.get("password"), elements.get("name"), elements.get("email")));
                 // for redirect
-                response302Header(dos, HOME_URL);
+                response302Header(dos, URL.HOME_URL.value());
                 return;
             }
 
             // 요구사항 5번
-            if (method.equals("POST") && url.equals("/user/login")) {
+            if (method.equals(HttpMethod.POST.value()) && url.equals("/user/login")) {
                 String queryString = IOUtils.readData(br, requestContentLength);
                 Map<String, String> elements = HttpRequestUtils.parseQueryParameter(queryString);
                 User user = repository.findUserById(elements.get("userId"));
 
                 // 로그인 성공
                 if (user != null && user.getPassword().equals(elements.get("password"))) {
-                    response302HeaderWithCookie(dos, HOME_URL);
+                    response302HeaderWithCookie(dos, URL.HOME_URL.value());
                     return;
                 }
                 // 로그인 실패
-                response302Header(dos, LOGIN_FAILED_URL);
+                response302Header(dos, URL.LOGIN_FAILED_URL.value());
                 return;
             }
 
@@ -97,16 +93,16 @@ public class RequestHandler implements Runnable {
             if (url.equals("/user/userList")) {
                 // 비로그인 상태 : redirect to /user/login.html
                 if (!cookie.equals("logined=true")) {
-                    response302Header(dos, LOGIN_URL);
+                    response302Header(dos, URL.LOGIN_URL.value());
                     return;
                 }
                 // 로그인 상태 : user/list.html 반환
-                body = Files.readAllBytes(Paths.get(ROOT_URL + LIST_URL));
+                body = Files.readAllBytes(Paths.get(URL.ROOT_URL.value() + URL.LIST_URL.value()));
             }
 
             // 요구사항 7번
-            if (method.equals("GET") && url.endsWith(".css")) {
-                body = Files.readAllBytes(Paths.get(ROOT_URL + url));
+            if (method.equals(HttpMethod.GET.value()) && url.endsWith(".css")) {
+                body = Files.readAllBytes(Paths.get(URL.ROOT_URL.value() + url));
                 response200HeaderWithCss(dos, body.length);
                 responseBody(dos, body);
                 return;
@@ -124,7 +120,7 @@ public class RequestHandler implements Runnable {
     }
 
     private String makeQueryStringByMethod(String method, BufferedReader br, int requestContentLength, String url) throws IOException {
-        if (method.equals("POST")) {
+        if (method.equals(HttpMethod.POST.value())) {
             return IOUtils.readData(br, requestContentLength);
         }
         // GET 방식
