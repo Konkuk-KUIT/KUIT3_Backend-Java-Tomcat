@@ -1,7 +1,7 @@
 package webserver;
 
-import db.Repository;
 import db.MemoryUserRepository;
+import db.Repository;
 import http.util.HttpRequestUtils;
 import http.util.IOUtils;
 import model.User;
@@ -14,6 +14,9 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static http.util.HttpRequestUtils.parseQueryParameter;
+
 
 public class RequestHandler implements Runnable{
     Socket connection;
@@ -54,7 +57,7 @@ public class RequestHandler implements Runnable{
                 String[] str = url.split("\\?");
                 String queryString = str[1];
 
-                Map<String, String> queryParameters = HttpRequestUtils.parseQueryParameter(queryString);
+                Map<String, String> queryParameters = parseQueryParameter(queryString);
                 // User 생성
                 User user = new User(queryParameters.get("userId"), queryParameters.get("password"),
                         queryParameters.get("name"), queryParameters.get("email"));
@@ -72,7 +75,7 @@ public class RequestHandler implements Runnable{
             int contentLength = 0;
             if(url.equals("/user/signup")){
                 String queryString = IOUtils.readData(br, contentLength);
-                Map<String, String> queryParameters = HttpRequestUtils.parseQueryParameter(queryString);
+                Map<String, String> queryParameters = parseQueryParameter(queryString);
 
                 // User 생성
                 User user = new User(queryParameters.get("userId"), queryParameters.get("password"),
@@ -87,6 +90,27 @@ public class RequestHandler implements Runnable{
                 response302Header(dos, "/index.html");
             }
 
+            //1-5 : 로그인하기
+            if(url.equals("/user/login")){
+                String queryString = IOUtils.readData(br, contentLength);
+                Map<String, String> queryParameter = parseQueryParameter(queryString);
+
+                //repository에서 해당 id 찾기
+                User user = repository.findUserById(queryParameter.get("userId"));
+                System.out.println(user);
+
+                //repository에서 해당 id가 없을 경우
+                if (user == null) {
+                    response302HeaderWithCookie(dos,"/",false);
+                    System.out.println("아이디 없음");
+                }
+                //repository에서 해당 id 존재
+                else {
+                    response302HeaderWithCookie(dos,"/index.html",true);
+                    System.out.println("아이디 있음");
+                }
+            }
+
             response200Header(dos, body.length);
             responseBody(dos, body);
 
@@ -94,6 +118,7 @@ public class RequestHandler implements Runnable{
             log.log(Level.SEVERE,e.getMessage());
         }
     }
+
 
     private void response200Header(DataOutputStream dos, int lengthOfBodyContent) {
         try {
@@ -123,5 +148,24 @@ public class RequestHandler implements Runnable{
             log.log(Level.SEVERE, e.getMessage());
         }
     }
+
+    private void response302HeaderWithCookie(DataOutputStream dos, String path, boolean loginSuccess) {
+        try {
+            dos.writeBytes("HTTP/1.1 302 Redirect \r\n");
+            if (loginSuccess) {
+                // 성공 시 index.html로 리다이렉트 & 헤더에 Cookie: logined=true를 추가
+                dos.writeBytes("Set-Cookie: logined=true; Path=/; HttpOnly\r\n");
+                dos.writeBytes("Location: " + path + "\r\n");
+            } else {
+                // 실패 시 logined_failed.html로 리다이렉트
+                dos.writeBytes("Location: /user/login_failed.html\r\n");
+            }
+            dos.writeBytes("\r\n");
+            dos.flush();
+        } catch (IOException e) {
+            log.log(Level.SEVERE, e.getMessage());
+        }
+    }
+
 
 }
