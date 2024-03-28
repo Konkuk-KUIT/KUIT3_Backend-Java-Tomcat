@@ -63,6 +63,14 @@ public class RequestHandler implements Runnable{
                 body = Files.readAllBytes(Paths.get("./webapp" + url));
             }
 
+            if(method.equals("GET") && url.equals("/user/login.html")){
+                body = Files.readAllBytes(Paths.get("./webapp" + url));
+            }
+
+            if(method.equals("GET") && url.equals("/user/login_failed.html")){
+                body = Files.readAllBytes(Paths.get("./webapp" + url));
+            }
+
             if(method.equals("GET") && url.startsWith("/user/signup")){
                 String queryString = url.split("\\?")[1];
                 Map<String,String> queryMap = parseQueryParameter(queryString);
@@ -78,6 +86,18 @@ public class RequestHandler implements Runnable{
                 User user = new User(queryMap.get("userId"), queryMap.get("password"), queryMap.get("name"), queryMap.get("email"));
                 memoryUserRepository.addUser(user);
                 response302Header(dos,"/index.html");
+                return;
+            }
+
+            if(method.equals("POST") && url.equals("/user/login")){
+                String queryString = IOUtils.readData(br, requestContentLength);
+                Map<String,String> queryMap = parseQueryParameter(queryString);
+                User user = memoryUserRepository.findUserById(queryMap.get("userId"));
+                if(user.getPassword().equals(queryMap.get("password"))){
+                    response302HeaderWithCookie(dos,"/index.html");
+                    return;
+                }
+                response302Header(dos, "/user/login_failed.html");
                 return;
             }
 
@@ -113,6 +133,17 @@ public class RequestHandler implements Runnable{
         try{
             dos.writeBytes("HTTP/1.1 302 Redirect \r\n");
             dos.writeBytes("Location: " + path + "\r\n");
+            dos.writeBytes("\r\n");
+        }catch (IOException e){
+            log.log(Level.SEVERE, e.getMessage());
+        }
+    }
+
+    private void response302HeaderWithCookie(DataOutputStream dos, String path){
+        try{
+            dos.writeBytes("HTTP/1.1 302 Redirect \r\n");
+            dos.writeBytes("Location: " + path + "\r\n");
+            dos.writeBytes("Cookie: logined=true");
             dos.writeBytes("\r\n");
         }catch (IOException e){
             log.log(Level.SEVERE, e.getMessage());
