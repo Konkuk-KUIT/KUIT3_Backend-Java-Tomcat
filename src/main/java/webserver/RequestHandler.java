@@ -39,6 +39,7 @@ public class RequestHandler implements Runnable{
 
             byte[] body = new byte[0];
             int requestContentLength = 0;
+            String cookie = "";
 
             while (true) {
                 final String line = br.readLine();
@@ -48,6 +49,9 @@ public class RequestHandler implements Runnable{
                 // header info
                 if (line.startsWith("Content-Length")) {
                     requestContentLength = Integer.parseInt(line.split(": ")[1]);
+                }
+                if (line.startsWith("Cookie")){
+                    cookie = line.split(": ")[1];
                 }
             }
 
@@ -93,12 +97,20 @@ public class RequestHandler implements Runnable{
                 String queryString = IOUtils.readData(br, requestContentLength);
                 Map<String,String> queryMap = parseQueryParameter(queryString);
                 User user = memoryUserRepository.findUserById(queryMap.get("userId"));
-                if(user.getPassword().equals(queryMap.get("password"))){
+                if(user != null && user.getPassword().equals(queryMap.get("password"))){
                     response302HeaderWithCookie(dos,"/index.html");
                     return;
+                }else{
+                    response302Header(dos, "/user/login_failed.html");
                 }
-                response302Header(dos, "/user/login_failed.html");
-                return;
+            }
+
+            if (url.equals("/user/userList")){
+                if(cookie.equals("logined=true")){
+                    body = Files.readAllBytes(Paths.get("./webapp/user/list.html"));
+                }else{
+                    response302Header(dos, "/user/login.html");
+                }
             }
 
             response200Header(dos, body.length);
@@ -143,7 +155,7 @@ public class RequestHandler implements Runnable{
         try{
             dos.writeBytes("HTTP/1.1 302 Redirect \r\n");
             dos.writeBytes("Location: " + path + "\r\n");
-            dos.writeBytes("Cookie: logined=true");
+            dos.writeBytes("Set-Cookie: logined=true" + "\r\n");        //그냥 Cookie로 하면 안되는 이유??
             dos.writeBytes("\r\n");
         }catch (IOException e){
             log.log(Level.SEVERE, e.getMessage());
