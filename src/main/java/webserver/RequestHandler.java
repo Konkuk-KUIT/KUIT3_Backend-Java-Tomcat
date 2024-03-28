@@ -1,6 +1,7 @@
 package webserver;
 
 import db.MemoryUserRepository;
+import http.util.IOUtils;
 import model.User;
 
 import java.io.*;
@@ -12,6 +13,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static http.util.HttpRequestUtils.parseQueryParameter;
+import static http.util.IOUtils.readData;
 
 public class RequestHandler implements Runnable{
     Socket connection;
@@ -36,9 +38,25 @@ public class RequestHandler implements Runnable{
             String url = startLines[1];
 
             byte[] body = new byte[0];
+            int requestContentLength = 0;
+
+            while (true) {
+                final String line = br.readLine();
+                if (line.equals("")) {
+                    break;
+                }
+                // header info
+                if (line.startsWith("Content-Length")) {
+                    requestContentLength = Integer.parseInt(line.split(": ")[1]);
+                }
+            }
 
             if(url.equals("/")){
                 body = Files.readAllBytes(Paths.get("./webapp/index.html"));
+            }
+
+            if(method.equals("GET") && url.equals("/index.html")){
+                body = Files.readAllBytes(Paths.get("./webapp" + url));
             }
 
             if(method.equals("GET") && url.equals("/user/form.html")){
@@ -47,6 +65,15 @@ public class RequestHandler implements Runnable{
 
             if(method.equals("GET") && url.startsWith("/user/signup")){
                 String queryString = url.split("\\?")[1];
+                Map<String,String> queryMap = parseQueryParameter(queryString);
+                User user = new User(queryMap.get("userId"), queryMap.get("password"), queryMap.get("name"), queryMap.get("email"));
+                memoryUserRepository.addUser(user);
+                response302Header(dos,"/index.html");
+                return;
+            }
+
+            if(method.equals("POST") && url.startsWith("/user/signup")){
+                String queryString = IOUtils.readData(br, requestContentLength);
                 Map<String,String> queryMap = parseQueryParameter(queryString);
                 User user = new User(queryMap.get("userId"), queryMap.get("password"), queryMap.get("name"), queryMap.get("email"));
                 memoryUserRepository.addUser(user);
