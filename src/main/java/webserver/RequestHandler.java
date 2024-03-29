@@ -1,6 +1,8 @@
 package webserver;
 
 import db.MemoryUserRepository;
+import domain.HttpMethod;
+import domain.URL;
 import http.util.IOUtils;
 import model.User;
 
@@ -13,6 +15,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static domain.HttpMethod.*;
+import static domain.URL.*;
 import static http.util.HttpRequestUtils.parseQueryParameter;
 import static http.util.IOUtils.readData;
 
@@ -21,13 +25,7 @@ public class RequestHandler implements Runnable{
     private static final Logger log = Logger.getLogger(RequestHandler.class.getName());
     private final MemoryUserRepository memoryUserRepository;
 
-    private static final String ROOT_URL = "./webapp";
-    private static final String HOME_URL = "/index.html";
-    private static final String LOGIN_FAILED_URL = "/user/login_failed.html";
-    private static final String LOGIN_URL = "/user/login.html";
-    private static final String LIST_URL = "/user/list.html";
-
-    private final Path homePath = Paths.get(ROOT_URL + HOME_URL);
+    private final Path homePath = Paths.get(ROOT_URL.getValue() + HOME_URL.getValue());
 
     public RequestHandler(Socket connection) {
         this.connection = connection;
@@ -68,57 +66,57 @@ public class RequestHandler implements Runnable{
                 body = Files.readAllBytes(homePath);
             }
 
-            if(method.equals("GET") && url.endsWith(".html")){
-                body = Files.readAllBytes(Paths.get(ROOT_URL + url));
+            if(method.equals(GET.getMethod()) && url.endsWith(".html")){
+                body = Files.readAllBytes(Paths.get(ROOT_URL.getValue() + url));
             }
 
-            if(method.equals("GET") && url.startsWith("/user/signup")){
+            if(method.equals(GET.getMethod()) && url.startsWith("/user/signup")){
                 String queryString = url.split("\\?")[1];
-                Map<String,String> queryMap = parseQueryParameter(queryString);
-                User user = new User(queryMap.get("userId"), queryMap.get("password"), queryMap.get("name"), queryMap.get("email"));
+                Map<String,String> queryParameter = parseQueryParameter(queryString);
+                User user = new User(queryParameter.get("userId"), queryParameter.get("password"), queryParameter.get("name"), queryParameter.get("email"));
                 memoryUserRepository.addUser(user);
-                response302Header(dos,HOME_URL);
+                response302Header(dos, HOME_URL.getValue());
                 return;
             }
 
-            if(method.equals("POST") && url.startsWith("/user/signup")){
+            if(method.equals(POST.getMethod()) && url.startsWith("/user/signup")){
                 String queryString = IOUtils.readData(br, requestContentLength);
-                Map<String,String> queryMap = parseQueryParameter(queryString);
-                User user = new User(queryMap.get("userId"), queryMap.get("password"), queryMap.get("name"), queryMap.get("email"));
+                Map<String,String> queryParameter = parseQueryParameter(queryString);
+                User user = new User(queryParameter.get("userId"), queryParameter.get("password"), queryParameter.get("name"), queryParameter.get("email"));
                 memoryUserRepository.addUser(user);
-                response302Header(dos,HOME_URL);
+                response302Header(dos, HOME_URL.getValue());
                 return;
             }
 
-            if(method.equals("POST") && url.equals("/user/login")){
+            if(method.equals(POST.getMethod()) && url.equals("/user/login")){
                 String queryString = IOUtils.readData(br, requestContentLength);
-                Map<String,String> queryMap = parseQueryParameter(queryString);
-                User user = memoryUserRepository.findUserById(queryMap.get("userId"));
-                if(user != null && user.getPassword().equals(queryMap.get("password"))){
-                    response302HeaderWithCookie(dos,HOME_URL);
+                Map<String,String> queryParameter = parseQueryParameter(queryString);
+                User user = memoryUserRepository.findUserById(queryParameter.get("userId"));
+                if(user != null && user.getPassword().equals(queryParameter.get("password"))){
+                    response302HeaderWithCookie(dos, HOME_URL.getValue());
                     return;
                 }else{
-                    response302Header(dos, LOGIN_FAILED_URL);
+                    response302Header(dos, LOGIN_FAILED_URL.getValue());
                 }
             }
 
             if (url.equals("/user/userList")){
                 if(cookie.equals("logined=true")){
-                    body = Files.readAllBytes(Paths.get(ROOT_URL + LIST_URL));
+                    body = Files.readAllBytes(Paths.get(ROOT_URL.getValue() + LIST_URL.getValue()));
                 }else{
-                    response302Header(dos, LOGIN_URL);
+                    response302Header(dos, LOGIN_URL.getValue());
                 }
             }
 
-            if (method.equals("GET") && url.endsWith(".css")) {
-                body = Files.readAllBytes(Paths.get(ROOT_URL + url));
+            if (method.equals(GET.getMethod()) && url.endsWith(".css")) {
+                body = Files.readAllBytes(Paths.get(ROOT_URL.getValue() + url));
                 response200HeaderWithCss(dos, body.length);
                 responseBody(dos, body);
                 return;
             }
 
-            if (method.equals("GET") && url.endsWith(".jpeg")) {
-                body = Files.readAllBytes(Paths.get(ROOT_URL + url));
+            if (method.equals(GET.getMethod()) && url.endsWith(".jpeg")) {
+                body = Files.readAllBytes(Paths.get(ROOT_URL.getValue() + url));
                 response200Header(dos, body.length);
                 responseBody(dos, body);
                 return;
