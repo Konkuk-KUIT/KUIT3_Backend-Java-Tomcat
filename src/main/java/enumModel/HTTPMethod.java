@@ -16,7 +16,7 @@ public enum HTTPMethod {
         return httpMethod;
     }
 
-    public static HTTPMethod findHttpMethod(String method) {
+    public static HTTPMethod findHttpMethod(String method) {//map에 넣어서 해보기
         if(method.equals("GET"))
             return HTTPMethod.GET;
         if(method.equals("POST"))

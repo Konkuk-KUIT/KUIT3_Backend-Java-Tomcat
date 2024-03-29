@@ -60,44 +60,45 @@ public class RequestHandler implements Runnable{
 //                    System.out.println(cookie);
 //                }
 //            }
-            Path path = Paths.get(Path_enum.DEFAULT_PATH.getPath() + hq.getUrl());
-            byte[] body = new byte[0];
-            if (hq.getMethod().equals(HTTPMethod.GET.getHttpMethod()) && hq.getUrl().endsWith(".html")) {
-                body = Files.readAllBytes(path);
-            }
-            if(hq.getUrl().equals(Path_enum.SIGN_UP_URL.getPath())){
-                //body 부분
-                String UserInfoquery = IOUtils.readData(br,hq.getRequestContentLength());
-                //System.out.println(UserInfoquery);
-                Map<String,String> UserMap = HttpRequestUtils.parseQueryParameter(UserInfoquery);
-                User user = new User(UserMap.get(UserQuery.USERID.getUserquery()),UserMap.get(UserQuery.PASSWORD.getUserquery()),UserMap.get(UserQuery.NAME.getUserquery()),UserMap.get(UserQuery.EMAIL.getUserquery()));
-                memoryUserRepository.addUser(user);
-                response302Header(dos,Path_enum.HOME_PATH.getPath());
-            }
-            if(hq.getUrl().equals(Path_enum.LOGIN_URL.getPath())){
-                String loginUserQuery = IOUtils.readData(br,hq.getRequestContentLength());
-                System.out.println(loginUserQuery);
-                Map<String,String> UserMap = HttpRequestUtils.parseQueryParameter(loginUserQuery);
-                if(memoryUserRepository.findUserById(UserMap.get(UserQuery.USERID.getUserquery()))==null){ //없는 경우
-                    response302Header(dos,Path_enum.LOGIN_FAILED_PATH.getPath());
-                    return;
-                }
-                response302HeaderWithCookie(dos,Path_enum.HOME_PATH.getPath());
-            }
-            if(hq.getUrl().equals(Path_enum.LIST_URL.getPath())){
-                if(!hq.getCookie().contains("logined=true")){
-                    response302Header(dos,Path_enum.LOGIN_PATH.getPath());
-                    return;
-                }
-                Path userListPath = Paths.get(Path_enum.getFullPath(Path_enum.LIST_PATH.getPath()));
-                body = Files.readAllBytes(userListPath);
-            }
-            if (hq.getMethod().equals(HTTPMethod.GET.getHttpMethod()) && hq.getUrl().endsWith(".css")) {
-                body = Files.readAllBytes(path);
-                response200HeaderWithCss(dos, body.length);
-                responseBody(dos, body);
-                return;
-            }
+//            Path path = Paths.get(Path_enum.DEFAULT_PATH.getPath() + hq.getUrl());
+              byte[] body = new byte[0];
+//            if (hq.getMethod().equals(HTTPMethod.GET.getHttpMethod()) && hq.getUrl().endsWith(".html")) {
+//                body = Files.readAllBytes(path);
+//            }
+            body = hq.makeRequest();
+//            if(hq.getUrl().equals(Path_enum.SIGN_UP_URL.getPath())){
+//                //body 부분
+//                String UserInfoquery = IOUtils.readData(br,hq.getRequestContentLength());
+//                //System.out.println(UserInfoquery);
+//                Map<String,String> UserMap = HttpRequestUtils.parseQueryParameter(UserInfoquery);
+//                User user = new User(UserMap.get(UserQuery.USERID.getUserquery()),UserMap.get(UserQuery.PASSWORD.getUserquery()),UserMap.get(UserQuery.NAME.getUserquery()),UserMap.get(UserQuery.EMAIL.getUserquery()));
+//                memoryUserRepository.addUser(user);
+//                response302Header(dos,Path_enum.HOME_PATH.getPath());
+//            }
+//            if(hq.getUrl().equals(Path_enum.LOGIN_URL.getPath())){
+//                String loginUserQuery = IOUtils.readData(br,hq.getRequestContentLength());
+//                System.out.println(loginUserQuery);
+//                Map<String,String> UserMap = HttpRequestUtils.parseQueryParameter(loginUserQuery);
+//                if(memoryUserRepository.findUserById(UserMap.get(UserQuery.USERID.getUserquery()))==null){ //없는 경우
+//                    response302Header(dos,Path_enum.LOGIN_FAILED_PATH.getPath());
+//                    return;
+//                }
+//                response302HeaderWithCookie(dos,Path_enum.HOME_PATH.getPath());
+//            }
+//            if(hq.getUrl().equals(Path_enum.LIST_URL.getPath())){
+//                if(!hq.getCookie().contains("logined=true")){
+//                    response302Header(dos,Path_enum.LOGIN_PATH.getPath());
+//                    return;
+//                }
+//                Path userListPath = Paths.get(Path_enum.getFullPath(Path_enum.LIST_PATH.getPath()));
+//                body = Files.readAllBytes(userListPath);
+//            }
+//            if (hq.getMethod().equals(HTTPMethod.GET.getHttpMethod()) && hq.getUrl().endsWith(".css")) {
+//                body = Files.readAllBytes(path);
+//                response200HeaderWithCss(dos, body.length);
+//                responseBody(dos, body);
+//                return;
+//            }
             response200Header(dos, body.length);
             responseBody(dos, body);
 
