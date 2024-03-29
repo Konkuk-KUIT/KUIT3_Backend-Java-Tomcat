@@ -16,6 +16,7 @@ public class HttpStartLine {
         this.startLines = startLine.split(" ");
         this.method = startLines[0];
         this.url = startLines[1];
+
     }
 
     public String getMethod(){

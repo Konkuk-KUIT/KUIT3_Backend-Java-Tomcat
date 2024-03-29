@@ -56,16 +56,6 @@ public class RequestHandler implements Runnable{
             byte[] body = new byte[0];
 
 
-
-            //서버로 부터 오는 Header 분석하는 부분 //////////
-//            String startLine = br.readLine();
-//            String[] startLines = startLine.split(" ");
-//            //startLines : ["GET", "/", "HTTP/1.1"]
-//            String method = startLines[0];
-//            //method : "GET"
-//            String url = startLines[1];
-//            //url : "/"
-
             int requestContentLength = 0;
             String cookie = "";
 
