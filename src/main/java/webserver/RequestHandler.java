@@ -57,7 +57,7 @@ public class RequestHandler implements Runnable{
                 Repository repository = MemoryUserRepository.getInstance();
                 repository.addUser(new User(map.get("userId"), map.get("password"), map.get("name"), map.get("email")));
                 log.log(Level.INFO, "saved " + repository.findUserById(map.get("userId")).toString());
-                body = Files.readAllBytes(Paths.get(ROOT_URL + HOME_URL));
+                response302Header(dos, ".."+HOME_URL); //TODO 상대경로 절대경로 해결하기
             }
 
             response200Header(dos, body.length);
@@ -65,6 +65,15 @@ public class RequestHandler implements Runnable{
 
         } catch (IOException e) {
             log.log(Level.SEVERE,e.getMessage());
+        }
+    }
+    private void response302Header(DataOutputStream dos, String location) {
+        try {
+            dos.writeBytes("HTTP/1.1 302 Found \r\n");
+            dos.writeBytes("Location: " + location);
+            dos.writeBytes("\r\n");
+        } catch (IOException e) {
+            log.log(Level.SEVERE, e.getMessage());
         }
     }
 
