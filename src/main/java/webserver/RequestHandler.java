@@ -45,6 +45,22 @@ public class RequestHandler implements Runnable{
 
             int contentLength = 0;
             String cookie = "";
+
+//            while (true) {
+//                final String line = br.readLine();
+//                if (line.equals("")) {
+//                    break;
+//                }
+//                // header info
+//                if (line.startsWith("Content-Length")) {
+//                    contentLength = Integer.parseInt(line.split(": ")[1]);
+//                }
+//
+//                if (line.startsWith("Cookie")) {
+//                    cookie = line.split(": ")[1];
+//                }
+//            }
+
             while (true) {
                 final String line = br.readLine();
                 if (line.equals("")) {
@@ -56,7 +72,13 @@ public class RequestHandler implements Runnable{
                 }
 
                 if (line.startsWith("Cookie")) {
-                    cookie = line.split(": ")[1];
+                    String[] cookies = line.split(": ")[1].split("; ");
+                    for (String c : cookies) {
+                        if (c.startsWith("logined=")) {
+                            cookie = c;
+                            break;
+                        }
+                    }
                 }
             }
 
@@ -69,7 +91,7 @@ public class RequestHandler implements Runnable{
             }
 
             //1-2 : GET 방식으로 회원가입하기
-            if(url.contains("/user/signup") && method.equals("GET")){
+            if(url.equals("/user/signup") && method.equals("GET")){
                 // 쿼리 스트링 정보를 파싱
                 String[] str = url.split("\\?");
                 String queryString = str[1];
@@ -114,23 +136,20 @@ public class RequestHandler implements Runnable{
 
                 //repository에서 해당 id 찾기
                 User user = repository.findUserById(queryParameter.get("userId"));
-                System.out.println(user);
 
                 //repository에서 해당 id가 없을 경우
                 if (user == null) {
                     response302HeaderWithCookie(dos,"/",false);
-                    System.out.println("아이디 없음");
                 }
                 //repository에서 해당 id 존재
                 else {
                     response302HeaderWithCookie(dos,"/index.html",true);
-                    System.out.println("아이디 있음");
                 }
             }
 
             System.out.println(cookie);
             if (url.equals("/user/userList")) {
-                if (!cookie.contains("logined=true")) {
+                if (!cookie.equals("logined=true")) {
                     response302Header(dos,"/user/login.html");
                     return;
                 }
@@ -199,7 +218,7 @@ public class RequestHandler implements Runnable{
             dos.writeBytes("HTTP/1.1 302 Redirect \r\n");
             if (loginSuccess) {
                 // 성공 시 index.html로 리다이렉트 & 헤더에 Cookie: logined=true를 추가
-                dos.writeBytes("Set-Cookie: logined=true; Path=/; HttpOnly\r\n");
+                dos.writeBytes("Set-Cookie: logined=true; Path=/;\r\n");
                 dos.writeBytes("Location: " + path + "\r\n");
             } else {
                 // 실패 시 logined_failed.html로 리다이렉트
