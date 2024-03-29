@@ -45,11 +45,9 @@ public class RequestHandler implements Runnable{
             //byte[] body = "Hello World".getBytes();
             byte[] body = new byte[0];
 
-            if(url.equals("/") || method.equals("GET") && url.equals("/index.html")) {
+            if(url.equals("/")) {
                 body = Files.readAllBytes(Paths.get(ROOT_URL + HOME_URL));
-            }
-
-            if(method.equals("GET") && url.equals("/user/form.html")) {
+            } else if(method.equals("GET")) {
                 body = Files.readAllBytes(Paths.get(ROOT_URL + url));
             }
 
@@ -73,10 +71,6 @@ public class RequestHandler implements Runnable{
                 response302Header(dos, ".."+HOME_URL); //TODO 상대경로 절대경로 해결하기
             }
 
-            if(method.equals("GET") && url.equals("/user/login.html")) {
-                body = Files.readAllBytes(Paths.get(ROOT_URL + url));
-            }
-
             if(method.equals("POST") && url.equals("/user/login")) {
                 int requestContentLength = 0;
                 while (true) {
@@ -98,10 +92,6 @@ public class RequestHandler implements Runnable{
                 } else {
                     response302Header(dos, "./login_failed.html"); //TODO 상대경로 절대경로 해결하기
                 }
-            }
-
-            if(method.equals("GET") && url.equals("/user/login_failed.html")) {
-                body = Files.readAllBytes(Paths.get(ROOT_URL + url));
             }
 
             response200Header(dos, body.length);
