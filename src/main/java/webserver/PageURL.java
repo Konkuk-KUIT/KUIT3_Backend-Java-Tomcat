@@ -22,4 +22,7 @@ public enum PageURL {
         }
         return ROOT.url + url;
     }
+    public static String getFullPath(String url) {
+        return ROOT.url + url;
+    }
 }
