@@ -1,6 +1,6 @@
 package webserver;
 import model.User;
-
+import request.request;
 import db.MemoryUserRepository;
 import http.util.HttpRequestUtils;
 import http.util.IOUtils;
@@ -33,9 +33,12 @@ public class RequestHandler implements Runnable{
         StringBuilder redirection = new StringBuilder("");
         StringBuilder headerAdder = new StringBuilder("");
         boolean cssre = false;
+
+
         try (InputStream in = connection.getInputStream(); OutputStream out = connection.getOutputStream()){
             br = new BufferedReader(new InputStreamReader(in));
             dos = new DataOutputStream(out);
+
             requestLine= br.readLine();
             Map<String, String> query=null;
             Map<String, String> requestHeader=null;
