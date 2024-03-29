@@ -127,6 +127,31 @@ public class RequestHandler implements Runnable{
                 response200Header(dos, body.length);
                 responseBody(dos, body);
             }
+            //http://localhost/user/userList
+            if (method.equals("GET") && url.equals("/user/userList")){
+                //cookie 값 확인
+                boolean cookieLogin = false;
+                while (true){
+                    final String line = br.readLine();
+                    if (line.equals("")) {
+                        break;
+                    }
+                    // cookie login 정보 찾기
+                    if (line.startsWith("Cookie: ")) {
+                        final String loginFlag = line.substring(line.lastIndexOf("=")+1);
+                        if(loginFlag.equals("true"))
+                            cookieLogin = true;
+                        break;
+                    }
+                }
+                if(cookieLogin){
+                    File userListFile = new File("webapp/user/list.html");
+                    byte[] body = Files.readAllBytes(userListFile.toPath());
+                    response200Header(dos, body.length);
+                    responseBody(dos, body);
+                }
+                response302Header(dos, "/user/login.html");
+            }
         } catch (IOException e) {
             log.log(Level.SEVERE,e.getMessage());
         }
@@ -137,7 +162,7 @@ public class RequestHandler implements Runnable{
             dos.writeBytes("HTTP/1.1 302 Found \r\n");
             dos.writeBytes("Location: " + path +"\r\n");
             //Cookie: logined=true
-            dos.writeBytes("Set-Cookie: logined=true; Path=/;\r\n");
+            dos.writeBytes("Set-Cookie: logined=true; Path=/;\r\n"); //...d00ffe2c"; logined=true - 이런식으로 붙음
             dos.writeBytes("\r\n");
             dos.flush();
         } catch (IOException e) {
