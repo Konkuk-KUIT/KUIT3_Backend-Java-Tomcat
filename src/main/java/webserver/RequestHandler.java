@@ -16,6 +16,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static http.util.HttpRequestUtils.parseQueryParameter;
+import static http.util.IOUtils.readData;
 
 public class RequestHandler implements Runnable{
     Socket connection;
@@ -52,8 +53,20 @@ public class RequestHandler implements Runnable{
                 body = Files.readAllBytes(Paths.get(ROOT_URL + url));
             }
 
-            if(method.equals("GET") && url.startsWith("/user/signup?")) {
-                Map<String, String> map = parseQueryParameter(url.substring("/user/signup?".length()));
+            if(method.equals("POST") && url.equals("/user/signup")) {
+                int requestContentLength = 0;
+                while (true) {
+                    final String line = br.readLine();
+                    if (line.equals("")) {
+                        break;
+                    }
+                    // header info
+                    if (line.startsWith("Content-Length")) {
+                        requestContentLength = Integer.parseInt(line.split(": ")[1]);
+                    }
+                }
+                String postRequestBody = readData(br, requestContentLength);
+                Map<String, String> map = parseQueryParameter(postRequestBody);
                 Repository repository = MemoryUserRepository.getInstance();
                 repository.addUser(new User(map.get("userId"), map.get("password"), map.get("name"), map.get("email")));
                 log.log(Level.INFO, "saved " + repository.findUserById(map.get("userId")).toString());
