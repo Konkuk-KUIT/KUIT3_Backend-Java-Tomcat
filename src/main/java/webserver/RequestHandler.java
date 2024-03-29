@@ -96,12 +96,19 @@ public class RequestHandler implements Runnable {
             }
 
             if (url.equals("/user/userList")) {
-                if (!cookie.equals("logined=true")){
-                    response302Header(dos,LOGIN_URL);
+                if (!cookie.equals("logined=true")) {
+                    response302Header(dos, LOGIN_URL);
                     return;
                 }
                 //login 상태라면 유저 리스트 보여줌
-                body = Files.readAllBytes(Paths.get(ROOT_URL+LIST_URL));
+                body = Files.readAllBytes(Paths.get(ROOT_URL + LIST_URL));
+            }
+
+            if (method.equals("GET") && url.endsWith(".css")) {
+                body = Files.readAllBytes(Paths.get(ROOT_URL + url));
+                response200HeaderWithContentType(dos, body.length, "text/css");
+                responseBody(dos, body);
+                return;
             }
 
             response200Header(dos, body.length);
@@ -138,6 +145,17 @@ public class RequestHandler implements Runnable {
             dos.writeBytes("HTTP/1.1 302 Redirect \r\n"); // 상태코드 변경
             dos.writeBytes("Location: " + path + "\r\n");
             dos.writeBytes("Set-Cookie: logined=true" + "\r\n");
+            dos.writeBytes("\r\n");
+        } catch (IOException e) {
+            log.log(Level.SEVERE, e.getMessage());
+        }
+    }
+
+    private void response200HeaderWithContentType(DataOutputStream dos, int lengthOfBodyContent, String contentType) {
+        try {
+            dos.writeBytes("HTTP/1.1 200 OK \r\n");
+            dos.writeBytes("Content-Type: " + contentType + ";charset=utf-8\r\n");
+            dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());
