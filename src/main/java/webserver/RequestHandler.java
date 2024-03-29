@@ -14,6 +14,10 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static webserver.HttpMethod.GET;
+import static webserver.HttpMethod.POST;
+import static webserver.Url.*;
+
 public class RequestHandler implements Runnable{
     Socket connection;
     private static final Logger log = Logger.getLogger(RequestHandler.class.getName());
@@ -44,15 +48,13 @@ public class RequestHandler implements Runnable{
                 if(headerLine.startsWith("Content-Length: ")){
                     String[] line = headerLine.split(" ");
                     contentLength = Integer.parseInt(line[1]);
-
-//                    System.out.println("Content-Length: " + contentLength);
                 }
                 if(headerLine.startsWith("Cookie: ")){
                     cookie = headerLine.substring(headerLine.indexOf(":") + 1);
                 }
             }
 
-            if(method.equals("GET") && url.equals("/user/userList")){
+            if(method.equals(GET.get()) && url.equals(USER_LIST.get())){
                 log.log(Level.INFO, "/user/userList");
 
                 if(cookie.contains("logined=true")){
@@ -65,28 +67,19 @@ public class RequestHandler implements Runnable{
                 return;
             }
 
-            if(method.equals("GET") && url.startsWith("/user/signup")){
-                log.log(Level.INFO, "/user/login GET");
+            if(method.equals(GET.get()) && url.startsWith(SIGNUP.get())){
+                log.log(Level.INFO, "/user/signup GET");
 
                 String[] queryString = url.split("\\?");
-                Map<String, String> map = HttpRequestUtils.parseQueryParameter(queryString[1]);
 
-                String userId = map.get("userId");
-                String password = map.get("password");
-                String name = map.get("name");
-                String email = map.get("email");
-
-                User user = new User(userId, password, name, email);
-                MemoryUserRepository repository = MemoryUserRepository.getInstance();
-
-                repository.addUser(user);
+                registerUser(queryString[1]);
 
                 response302Header(dos, "/index.html");
 
                 return;
             }
 
-            if(method.equals("GET")){
+            if(method.equals(GET.get())){
                 log.log(Level.INFO, "GET " + url);
 
                 String contentType = "text/html";
@@ -117,31 +110,19 @@ public class RequestHandler implements Runnable{
             }
 
 
-            if(method.equals("POST") && url.equals("/user/signup")){
+            if(method.equals(POST.get()) && url.equals(SIGNUP.get())){
                 log.log(Level.INFO, "/user/signup POST");
 
                 String queryString = IOUtils.readData(br, contentLength);
-                Map<String, String> map = HttpRequestUtils.parseQueryParameter(queryString);
 
-                String userId = map.get("userId");
-                String password = map.get("password");
-                String name = map.get("name");
-                String email = map.get("email");
-
-                User user = new User(userId, password, name, email);
-
-                MemoryUserRepository repository = MemoryUserRepository.getInstance();
-
-                repository.addUser(user);
-
-//                repository.findAll().forEach( (u)->{ System.out.println("User(id=" + u.getUserId() + ", pwd=" + u.getPassword()); } );
+                registerUser(queryString);
 
                 response302Header(dos, "/index.html");
 
                 return;
             }
 
-            if(method.equals("POST") && url.equals("/user/login")){
+            if(method.equals(POST.get()) && url.equals(LOGIN.get())){
                 log.log(Level.INFO, "/user/login");
 
                 MemoryUserRepository repository = MemoryUserRepository.getInstance();
@@ -162,6 +143,23 @@ public class RequestHandler implements Runnable{
 
         } catch (IOException e) {
             log.log(Level.SEVERE,e.getMessage());
+        }
+    }
+
+    private void registerUser(String queryString){
+        Map<String, String> map = HttpRequestUtils.parseQueryParameter(queryString);
+
+        String userId = map.get(QueryKey.USER_ID.get());
+        String password = map.get(QueryKey.PASSWORD.get());
+        String name = map.get(QueryKey.NAME.get());
+        String email = map.get(QueryKey.EMAIL.get());
+
+        User user = new User(userId, password, name, email);
+
+        MemoryUserRepository repository = MemoryUserRepository.getInstance();
+
+        if(repository.findUserById(userId) == null){
+            repository.addUser(user);
         }
     }
 
