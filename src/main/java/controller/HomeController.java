@@ -2,9 +2,9 @@ package controller;
 
 import http.HttpRequest;
 import http.HttpResponse;
-import structure.Header;
-import structure.HeaderKey;
-import structure.ResponseStartLine;
+import http.structure.Header;
+import http.structure.HeaderKey;
+import http.structure.ResponseStartLine;
 
 public class HomeController implements Controller {
 

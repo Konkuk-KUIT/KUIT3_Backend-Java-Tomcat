@@ -2,9 +2,9 @@ package http;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import structure.Header;
-import structure.HeaderKey;
-import structure.ResponseStartLine;
+import http.structure.Header;
+import http.structure.HeaderKey;
+import http.structure.ResponseStartLine;
 
 public class HttpResponse {
     private final byte[] startLine;

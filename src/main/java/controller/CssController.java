@@ -3,10 +3,10 @@ package controller;
 import http.HttpRequest;
 import http.HttpResponse;
 import java.io.IOException;
-import structure.ContentType;
-import structure.Header;
-import structure.HeaderKey;
-import structure.ResponseStartLine;
+import http.structure.ContentType;
+import http.structure.Header;
+import http.structure.HeaderKey;
+import http.structure.ResponseStartLine;
 
 public class CssController implements Controller{
     @Override

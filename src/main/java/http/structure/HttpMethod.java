@@ -1,4 +1,4 @@
-package structure;
+package http.structure;
 
 public enum HttpMethod {
     GET,

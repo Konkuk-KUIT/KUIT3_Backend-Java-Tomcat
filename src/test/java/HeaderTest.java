@@ -1,7 +1,6 @@
-import java.util.HashMap;
 import org.junit.jupiter.api.Test;
-import structure.Header;
-import structure.HeaderKey;
+import http.structure.Header;
+import http.structure.HeaderKey;
 
 public class HeaderTest {
     @Test

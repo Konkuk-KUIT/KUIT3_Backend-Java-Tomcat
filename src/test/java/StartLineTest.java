@@ -1,5 +1,5 @@
 import org.junit.jupiter.api.Test;
-import structure.RequestStartLine;
+import http.structure.RequestStartLine;
 
 public class StartLineTest {
 

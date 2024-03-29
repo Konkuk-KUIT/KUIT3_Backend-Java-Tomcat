@@ -1,4 +1,4 @@
-package structure;
+package http.structure;
 
 public enum ContentType {
     HTML("text/html;charset=utf-8"),

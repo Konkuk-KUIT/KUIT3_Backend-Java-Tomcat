@@ -6,10 +6,10 @@ import http.HttpResponse;
 import java.io.IOException;
 import java.util.Map;
 import service.UserService;
-import structure.ContentType;
-import structure.Header;
-import structure.HeaderKey;
-import structure.ResponseStartLine;
+import http.structure.ContentType;
+import http.structure.Header;
+import http.structure.HeaderKey;
+import http.structure.ResponseStartLine;
 
 public class SignUpController implements Controller {
 

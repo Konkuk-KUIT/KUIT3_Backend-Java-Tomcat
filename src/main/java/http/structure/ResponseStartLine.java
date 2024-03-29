@@ -1,4 +1,4 @@
-package structure;
+package http.structure;
 
 public class ResponseStartLine {    // 간단히
     private final String startLine;

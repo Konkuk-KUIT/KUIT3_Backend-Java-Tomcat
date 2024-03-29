@@ -3,10 +3,10 @@ package http;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Map;
-import structure.Body;
-import structure.Header;
-import structure.HeaderKey;
-import structure.RequestStartLine;
+import http.structure.Body;
+import http.structure.Header;
+import http.structure.HeaderKey;
+import http.structure.RequestStartLine;
 
 public class HttpRequest {
 

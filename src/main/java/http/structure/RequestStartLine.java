@@ -1,4 +1,4 @@
-package structure;
+package http.structure;
 
 import http.util.HttpRequestUtils;
 import java.util.HashMap;
