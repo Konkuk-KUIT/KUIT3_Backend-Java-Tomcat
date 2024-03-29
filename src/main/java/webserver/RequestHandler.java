@@ -21,6 +21,9 @@ public class RequestHandler implements Runnable{
     private static final Logger log = Logger.getLogger(RequestHandler.class.getName());
     private static final String ROOT_URL = "./webapp";
     private static final String HOME_URL = "/index.html";
+    private static final String LOGIN_URL = "/user/login.html";
+    private static final String LOGIN_FAILED_URL = "/user/login_failed.html";
+    private static final String USER_LIST_URL = "/user/list.html";
     private final Repository repository;
     public RequestHandler(Socket connection) {
         this.connection = connection;
@@ -77,7 +80,7 @@ public class RequestHandler implements Runnable{
             if(method.equals("POST") && url.equals("/user/signup")) {
                 repository.addUser(new User(parsedRequestBody.get("userId"), parsedRequestBody.get("password"), parsedRequestBody.get("name"), parsedRequestBody.get("email")));
                 log.log(Level.INFO, "saved " + repository.findUserById(parsedRequestBody.get("userId")).toString());
-                response302Header(dos, ".."+HOME_URL); //TODO 상대경로 절대경로 해결하기
+                response302Header(dos, HOME_URL);
             }
 
             if(method.equals("POST") && url.equals("/user/login")) {
@@ -85,16 +88,16 @@ public class RequestHandler implements Runnable{
                 if(foundUser!=null && foundUser.getPassword().equals(parsedRequestBody.get("password"))) {
                     response302HeaderWithCookie(dos, ".."+HOME_URL, "logined=true; path=/;");
                 } else {
-                    response302Header(dos, "./login_failed.html"); //TODO 상대경로 절대경로 해결하기
+                    response302Header(dos, LOGIN_FAILED_URL);
                 }
             }
 
             if(url.equals("/user/userList")) {
                 if(!Arrays.asList(cookies).contains("logined=true")) {
-                    response302Header(dos,"/user/login.html");
+                    response302Header(dos,LOGIN_URL);
                     return;
                 }
-                body = Files.readAllBytes(Paths.get(ROOT_URL + "/user/list.html"));
+                body = Files.readAllBytes(Paths.get(ROOT_URL + USER_LIST_URL));
             }
 
             if (method.equals("GET") && url.endsWith(".css")) {
