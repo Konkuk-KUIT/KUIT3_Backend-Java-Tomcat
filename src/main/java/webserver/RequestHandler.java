@@ -2,16 +2,13 @@ package webserver;
 
 import db.MemoryUserRepository;
 import db.Repository;
-import http.util.HttpRequestUtils;
 import model.User;
 
 import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -23,8 +20,10 @@ public class RequestHandler implements Runnable{
     private static final Logger log = Logger.getLogger(RequestHandler.class.getName());
     private static final String ROOT_URL = "./webapp";
     private static final String HOME_URL = "/index.html";
+    private final Repository repository;
     public RequestHandler(Socket connection) {
         this.connection = connection;
+        repository = MemoryUserRepository.getInstance();
     }
 
     @Override
@@ -40,15 +39,21 @@ public class RequestHandler implements Runnable{
             String url = startLines[1];
 
             int requestContentLength = 0;
+            String requestBody = "";
+            Map<String, String> parsedRequestBody = null;
             while (true) {
                 final String line = br.readLine();
-                if (line.equals("")) {
+                if (line.isEmpty()) {
                     break;
                 }
                 // header info
                 if (line.startsWith("Content-Length")) {
                     requestContentLength = Integer.parseInt(line.split(": ")[1]);
                 }
+            }
+            if (requestContentLength!=0) {
+                requestBody = readData(br, requestContentLength);
+                parsedRequestBody = parseQueryParameter(requestBody);
             }
 
             log.log(Level.INFO, "method: " + method + ", url: " + url);
@@ -63,20 +68,14 @@ public class RequestHandler implements Runnable{
             }
 
             if(method.equals("POST") && url.equals("/user/signup")) {
-                String postRequestBody = readData(br, requestContentLength);
-                Map<String, String> map = parseQueryParameter(postRequestBody);
-                Repository repository = MemoryUserRepository.getInstance();
-                repository.addUser(new User(map.get("userId"), map.get("password"), map.get("name"), map.get("email")));
-                log.log(Level.INFO, "saved " + repository.findUserById(map.get("userId")).toString());
+                repository.addUser(new User(parsedRequestBody.get("userId"), parsedRequestBody.get("password"), parsedRequestBody.get("name"), parsedRequestBody.get("email")));
+                log.log(Level.INFO, "saved " + repository.findUserById(parsedRequestBody.get("userId")).toString());
                 response302Header(dos, ".."+HOME_URL); //TODO 상대경로 절대경로 해결하기
             }
 
             if(method.equals("POST") && url.equals("/user/login")) {
-                String postRequestBody = readData(br, requestContentLength);
-                Map<String, String> map = parseQueryParameter(postRequestBody);
-                Repository repository = MemoryUserRepository.getInstance();
-                User foundUser = repository.findUserById(map.get("userId"));
-                if(foundUser!=null && foundUser.getPassword().equals(map.get("password"))) {
+                User foundUser = repository.findUserById(parsedRequestBody.get("userId"));
+                if(foundUser!=null && foundUser.getPassword().equals(parsedRequestBody.get("password"))) {
                     response302HeaderWithCookie(dos, ".."+HOME_URL, "logined=true; path=/;");
                 } else {
                     response302Header(dos, "./login_failed.html"); //TODO 상대경로 절대경로 해결하기
