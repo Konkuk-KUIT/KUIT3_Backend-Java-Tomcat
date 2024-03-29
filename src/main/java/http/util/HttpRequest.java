@@ -9,14 +9,13 @@ public class HttpRequest {
     private final String path;
     private final String version;
     private final Map<String, String> headers;
-    private final String body;
+    // private final String body;
 
-    private HttpRequest(String method, String path, String version, Map<String, String> headers, String body) {
+    private HttpRequest(String method, String path, String version, Map<String, String> headers) {
         this.method = method;
         this.path = path;
         this.version = version;
         this.headers = headers;
-        this.body = body;
     }
 
     public static HttpRequest from(BufferedReader reader) throws IOException {
@@ -33,15 +32,7 @@ public class HttpRequest {
             headers.put(headerParts[0], headerParts[1]);
         }
 
-        StringBuilder bodyBuilder = new StringBuilder();
-        if (headers.containsKey("Content-Length")) {
-            int contentLength = Integer.parseInt(headers.get("Content-Length"));
-            for (int i = 0; i < contentLength; i++) {
-                bodyBuilder.append((char)reader.read());
-            }
-        }
-
-        return new HttpRequest(method, path, version, headers, bodyBuilder.toString());
+        return new HttpRequest(method, path, version, headers);
     }
 
     // Getter 메서드들
@@ -61,9 +52,9 @@ public class HttpRequest {
         return headers;
     }
 
-    public String getBody() {
-        return body;
-    }
+//    public String getBody() {
+//        return body;
+//    }
 
     // 특정 헤더 값을 가져오는 메서드 추가
     public String getHeader(String name) {

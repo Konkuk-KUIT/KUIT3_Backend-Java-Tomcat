@@ -38,8 +38,7 @@ public class RequestHandler implements Runnable {
             HttpRequest httpRequest = HttpRequest.from(br);
             String method = httpRequest.getMethod();
             String url = httpRequest.getPath();
-
-            System.out.println("startLine = " + method + " " + url);
+            System.out.println("method = " + method);
             System.out.println("url = " + url);
 
             byte[] body = new byte[0];
@@ -117,11 +116,9 @@ public class RequestHandler implements Runnable {
 
             // POST 요청 처리
             if (method.equals("POST")) {
-                System.out.println("포스트 요청이 왔어요");
                 // 회원가입 요청 처리
 
                 if (url.equals("/user/signup")) {
-                    System.out.println("좋아요");
                     int requestContentLength = 0;
 
                     // 헤더 읽기 -> HttpRequest로 역할 분담
@@ -129,9 +126,10 @@ public class RequestHandler implements Runnable {
                     if (contentLengthHeader != null) {
                         requestContentLength = Integer.parseInt(contentLengthHeader);
                     }
+                    System.out.println("contentLengthHeader = " + contentLengthHeader);
 
                     String requestBody = IOUtils.readData(br, requestContentLength);
-
+                    System.out.println("requestBody = " + requestBody);
                     Map<String, String> queryParameter = HttpRequestUtils.parseQueryParameter(requestBody);
                     User user = new User(queryParameter.get("userId"), queryParameter.get("password"), queryParameter.get("name"), queryParameter.get("email"));
                     repository.addUser(user);
@@ -140,7 +138,6 @@ public class RequestHandler implements Runnable {
                 }
 
                 if (url.equals("/user/login")) {
-                    System.out.println("로그인 시도");
                     int requestContentLength = 0;
 
                     // 헤더 읽기 -> HttpRequest로 역할 분담
@@ -150,19 +147,17 @@ public class RequestHandler implements Runnable {
                         requestContentLength = Integer.parseInt(contentLengthHeader);
                     }
 
-
                     String requestBody = IOUtils.readData(br, requestContentLength);
-                    System.out.println("로그인 정보 읽어오기");
-                    System.out.println("requestBody = " + requestBody);
                     // 아이디, 비번 파싱
                     Map<String, String> bodyData = HttpRequestUtils.parseQueryParameter(requestBody);
                     String userId = bodyData.get("userId");
                     String userPw = bodyData.get("password");
+                    System.out.println("userPw = " + userPw);
 
                     // DB에서 회원정보 조회하기
                     User loginUser = MemoryUserRepository.getInstance().findUserById(userId);
                     if (loginUser != null && loginUser.getPassword().equals(userPw)) {
-                        System.out.println("로그인에 성공했어요!!");
+
                         try {
                             dos.writeBytes("HTTP/1.1 302Found \r\n");
                             dos.writeBytes("Location: " + "/" + "\r\n");
@@ -172,9 +167,6 @@ public class RequestHandler implements Runnable {
                             log.log(Level.SEVERE, e.getMessage());
                         }
                     } else {
-                        System.out.println("로그인에 실패했어요 ㅠ.");
-                        System.out.println("userId = " + userId);
-                        System.out.println("userPw = " + userPw);
                         body = Files.readAllBytes(Paths.get(ROOT_URL + "/user/login_failed.html"));
                         if (body != null) {
                             response200Header(dos, body.length);
