@@ -8,6 +8,7 @@ import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -41,6 +42,7 @@ public class RequestHandler implements Runnable{
             int requestContentLength = 0;
             String requestBody = "";
             Map<String, String> parsedRequestBody = null;
+            String[] cookies = new String[0];
             while (true) {
                 final String line = br.readLine();
                 if (line.isEmpty()) {
@@ -49,6 +51,11 @@ public class RequestHandler implements Runnable{
                 // header info
                 if (line.startsWith("Content-Length")) {
                     requestContentLength = Integer.parseInt(line.split(": ")[1]);
+                }
+                if (line.startsWith("Cookie")) {
+                    String cookieString = line.split(": ")[1];
+                    cookies = cookieString.split("; ");
+
                 }
             }
             if (requestContentLength!=0) {
@@ -80,6 +87,14 @@ public class RequestHandler implements Runnable{
                 } else {
                     response302Header(dos, "./login_failed.html"); //TODO 상대경로 절대경로 해결하기
                 }
+            }
+
+            if(url.equals("/user/userList")) {
+                if(!Arrays.asList(cookies).contains("logined=true")) {
+                    response302Header(dos,"/user/login.html");
+                    return;
+                }
+                body = Files.readAllBytes(Paths.get(ROOT_URL + "/user/list.html"));
             }
 
             response200Header(dos, body.length);
