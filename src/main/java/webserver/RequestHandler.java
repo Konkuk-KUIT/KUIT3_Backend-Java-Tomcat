@@ -7,6 +7,7 @@ import model.User;
 import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.logging.Level;
@@ -19,6 +20,14 @@ public class RequestHandler implements Runnable{
     Socket connection;
     private static final Logger log = Logger.getLogger(RequestHandler.class.getName());
     private final MemoryUserRepository memoryUserRepository;
+
+    private static final String ROOT_URL = "./webapp";
+    private static final String HOME_URL = "/index.html";
+    private static final String LOGIN_FAILED_URL = "/user/login_failed.html";
+    private static final String LOGIN_URL = "/user/login.html";
+    private static final String LIST_URL = "/user/list.html";
+
+    private final Path homePath = Paths.get(ROOT_URL + HOME_URL);
 
     public RequestHandler(Socket connection) {
         this.connection = connection;
@@ -56,23 +65,11 @@ public class RequestHandler implements Runnable{
             }
 
             if(url.equals("/")){
-                body = Files.readAllBytes(Paths.get("./webapp/index.html"));
+                body = Files.readAllBytes(homePath);
             }
 
-            if(method.equals("GET") && url.equals("/index.html")){
-                body = Files.readAllBytes(Paths.get("./webapp" + url));
-            }
-
-            if(method.equals("GET") && url.equals("/user/form.html")){
-                body = Files.readAllBytes(Paths.get("./webapp" + url));
-            }
-
-            if(method.equals("GET") && url.equals("/user/login.html")){
-                body = Files.readAllBytes(Paths.get("./webapp" + url));
-            }
-
-            if(method.equals("GET") && url.equals("/user/login_failed.html")){
-                body = Files.readAllBytes(Paths.get("./webapp" + url));
+            if(method.equals("GET") && url.endsWith(".html")){
+                body = Files.readAllBytes(Paths.get(ROOT_URL + url));
             }
 
             if(method.equals("GET") && url.startsWith("/user/signup")){
@@ -80,7 +77,7 @@ public class RequestHandler implements Runnable{
                 Map<String,String> queryMap = parseQueryParameter(queryString);
                 User user = new User(queryMap.get("userId"), queryMap.get("password"), queryMap.get("name"), queryMap.get("email"));
                 memoryUserRepository.addUser(user);
-                response302Header(dos,"/index.html");
+                response302Header(dos,HOME_URL);
                 return;
             }
 
@@ -89,7 +86,7 @@ public class RequestHandler implements Runnable{
                 Map<String,String> queryMap = parseQueryParameter(queryString);
                 User user = new User(queryMap.get("userId"), queryMap.get("password"), queryMap.get("name"), queryMap.get("email"));
                 memoryUserRepository.addUser(user);
-                response302Header(dos,"/index.html");
+                response302Header(dos,HOME_URL);
                 return;
             }
 
@@ -98,24 +95,31 @@ public class RequestHandler implements Runnable{
                 Map<String,String> queryMap = parseQueryParameter(queryString);
                 User user = memoryUserRepository.findUserById(queryMap.get("userId"));
                 if(user != null && user.getPassword().equals(queryMap.get("password"))){
-                    response302HeaderWithCookie(dos,"/index.html");
+                    response302HeaderWithCookie(dos,HOME_URL);
                     return;
                 }else{
-                    response302Header(dos, "/user/login_failed.html");
+                    response302Header(dos, LOGIN_FAILED_URL);
                 }
             }
 
             if (url.equals("/user/userList")){
                 if(cookie.equals("logined=true")){
-                    body = Files.readAllBytes(Paths.get("./webapp/user/list.html"));
+                    body = Files.readAllBytes(Paths.get(ROOT_URL + LIST_URL));
                 }else{
-                    response302Header(dos, "/user/login.html");
+                    response302Header(dos, LOGIN_URL);
                 }
             }
 
             if (method.equals("GET") && url.endsWith(".css")) {
-                body = Files.readAllBytes(Paths.get("./webapp/css/style.css"));
+                body = Files.readAllBytes(Paths.get(ROOT_URL + url));
                 response200HeaderWithCss(dos, body.length);
+                responseBody(dos, body);
+                return;
+            }
+
+            if (method.equals("GET") && url.endsWith(".jpeg")) {
+                body = Files.readAllBytes(Paths.get(ROOT_URL + url));
+                response200Header(dos, body.length);
                 responseBody(dos, body);
                 return;
             }
