@@ -22,6 +22,7 @@ public class RequestHandler implements Runnable {
     private static final Logger log = Logger.getLogger(RequestHandler.class.getName());
     private static final String ROOT_URL = "./webapp";
     private static final String HOME_URL = "/index.html";
+    private static final String LOGINED_FAILED_URL = "/user/login_failed.html";
     private final Repository repository;
     private final Path homePath = Paths.get(ROOT_URL + HOME_URL);
 
@@ -55,7 +56,6 @@ public class RequestHandler implements Runnable {
                     break;
                 }
                 if (line.startsWith("Content-Length")) {
-                    System.out.println(line);
                     requestContentLength = Integer.parseInt(line.split(": ")[1]);
                 }
             }
@@ -78,6 +78,14 @@ public class RequestHandler implements Runnable {
                 repository.addUser(user);
 
                 response302Header(dos, HOME_URL);
+                return;
+            }
+
+            if (url.equals("/user/login")) {
+                String queryString = IOUtils.readData(br, requestContentLength);
+                Map<String, String> queryParameter = HttpRequestUtils.parseQueryParameter(queryString);
+                User user = repository.findUserById(queryParameter.get("userId"));
+                login(dos, queryParameter, user);
                 return;
             }
 
@@ -110,6 +118,17 @@ public class RequestHandler implements Runnable {
         }
     }
 
+    private void response302HeaderWithCookie(DataOutputStream dos, String path) {
+        try {
+            dos.writeBytes("HTTP/1.1 302 Redirect \r\n"); // 상태코드 변경
+            dos.writeBytes("Location: " + path + "\r\n");
+            dos.writeBytes("Set-Cookie: logined=true" + "\r\n");
+            dos.writeBytes("\r\n");
+        } catch (IOException e) {
+            log.log(Level.SEVERE, e.getMessage());
+        }
+    }
+
     private void response404NotFound(DataOutputStream dos) {
         try {
             String notFoundMessage = "<html><head><title>404 Not Found</title></head><body><h1>404 Not Found</h1></body></html>";
@@ -132,6 +151,14 @@ public class RequestHandler implements Runnable {
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());
         }
+    }
+
+    private void login(DataOutputStream dos, Map<String, String> queryParameter, User user) {
+        if (user != null && user.getPassword().equals((queryParameter.get("password")))) {
+            response302HeaderWithCookie(dos, HOME_URL);
+            return;
+        }
+        response302Header(dos, LOGINED_FAILED_URL);
     }
 
 }
