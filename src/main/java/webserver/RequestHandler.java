@@ -2,16 +2,18 @@ package webserver;
 
 import db.MemoryUserRepository;
 import db.Repository;
+import http.constants.HttpHeader;
 import http.request.HttpRequest;
+import http.response.HttpResponse;
 import model.User;
 import model.constants.UserQueryKey;
 
 import java.io.*;
 import java.net.Socket;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -39,17 +41,20 @@ public class RequestHandler implements Runnable{
 
             byte[] body = new byte[0];
             HttpRequest httpRequest = HttpRequest.from(br);
+            HttpResponse httpResponse = new HttpResponse(dos);
 
             // 요구 사항 1번
             if(httpRequest.getMethod().isEqual("GET") && httpRequest.getUrl().endsWith(".html")) {
-                body = Files.readAllBytes(Paths.get(ROOT.getUrl() + httpRequest.getUrl()));
+                httpResponse.forward(httpRequest.getUrl());
+                return;
             }
 
             if (httpRequest.getUrl().equals("/")) {
-                body = Files.readAllBytes(homePath);
+                httpResponse.forward(INDEX.getUrl());
+                return;
             }
 
-            // 요구 사항 2,3,4번
+            // 요구 사항 3,4번
             if (httpRequest.getUrl().equals("/user/signup")) {
                 Map<String, String> queryParameters = httpRequest.getQueryParametersFromBody();
                 User user = new User(queryParameters.get(UserQueryKey.ID.getKey()),
@@ -57,7 +62,7 @@ public class RequestHandler implements Runnable{
                         queryParameters.get(UserQueryKey.NAME.getKey()),
                         queryParameters.get(UserQueryKey.EMAIL.getKey()));
                 repository.addUser(user);
-                response302Header(dos, INDEX.getUrl());
+                httpResponse.redirect(INDEX.getUrl());
                 return;
             }
 
@@ -65,49 +70,45 @@ public class RequestHandler implements Runnable{
             if (httpRequest.getUrl().equals("/user/login")) {
                 Map<String, String> queryParameter = httpRequest.getQueryParametersFromBody();
                 User user = repository.findUserById(queryParameter.get("userId"));
-                login(dos, queryParameter, user);
+                login(httpResponse, queryParameter, user);
                 return;
             }
 
             // 요구 사항 6번
             if (httpRequest.getUrl().equals("/user/userList")) {
-                if (!httpRequest.getHeader(COOKIE).equals("logined=true")) {
-                    response302Header(dos, LOGIN.getUrl());
+
+                if (httpRequest.getHeader(COOKIE) != null && httpRequest.getHeader(COOKIE).equals("logined=true")) {
+                    httpResponse.forward(USER_LIST_HTML.getUrl());
                     return;
                 }
-                body = Files.readAllBytes(Paths.get(ROOT.getUrl() + USER_LIST_HTML.getUrl()));
+
+                httpResponse.redirect(LOGIN.getUrl());
+                return;
             }
 
-            // 요구 사항 7번
+            //요구 사항 7번
             if (httpRequest.getMethod().isEqual("GET") && httpRequest.getUrl().endsWith(".css")) {
-                body = Files.readAllBytes(Paths.get(ROOT.getUrl() + httpRequest.getUrl()));
-                response200HeaderWithCss(dos, body.length);
-                responseBody(dos, body);
+                httpResponse.forward(httpRequest.getUrl());
                 return;
             }
 
             // image
             if (httpRequest.getMethod().isEqual("GET") && httpRequest.getUrl().endsWith(".jpeg")) {
-                body = Files.readAllBytes(Paths.get(ROOT.getUrl() + httpRequest.getUrl()));
-                response200Header(dos, body.length);
-                responseBody(dos, body);
-                return;
+                httpResponse.forward(httpRequest.getUrl());
             }
-
-            response200Header(dos, body.length);
-            responseBody(dos, body);
 
         } catch (IOException e) {
             log.log(Level.SEVERE,e.getMessage());
         }
     }
 
-    private void login(DataOutputStream dos, Map<String, String> queryParameter, User user) {
+    private void login(HttpResponse httpResponse, Map<String, String> queryParameter, User user) throws IOException {
         if (user != null && user.getPassword().equals(queryParameter.get("password"))) {
-            response302HeaderWithCookie(dos, INDEX.getUrl());
+            httpResponse.put(HttpHeader.SET_COOKIE, "logined=true");
+            httpResponse.redirect(INDEX.getUrl());
             return;
         }
-        response302Header(dos, LOGIN_FAILED.getUrl());
+        httpResponse.redirect(LOGIN_FAILED.getUrl());
     }
 
     private void response200Header(DataOutputStream dos, int lengthOfBodyContent) {
