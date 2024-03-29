@@ -56,7 +56,9 @@ public class RequestHandler implements Runnable{
 
             if(url.equals("/")) {
                 body = Files.readAllBytes(Paths.get(ROOT_URL + HOME_URL));
-            } else if(method.equals("GET")) {
+            }
+
+            if(method.equals("GET") && url.endsWith(".html")) {
                 body = Files.readAllBytes(Paths.get(ROOT_URL + url));
             }
 
