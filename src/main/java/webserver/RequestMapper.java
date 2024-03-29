@@ -32,10 +32,7 @@ public class RequestMapper {
     }
 
     public void proceed() throws Exception {
-        System.out.println("url =" + request.getPath());
-        System.out.println("controllerMap:" + controllerMap);
         Controller controller = controllerMap.get(request.getPath());
-        System.out.println("controller = "+controller);
         controller.execute(request, response);
     }
 }

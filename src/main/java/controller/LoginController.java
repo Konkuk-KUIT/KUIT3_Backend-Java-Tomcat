@@ -17,7 +17,6 @@ public class LoginController implements Controller{
     @Override
     public void execute(HttpRequest request, HttpResponse response) throws IOException {
         String queryString = request.getBody();
-        System.out.println("queryString :" + queryString);
         Map<String, String> queryParameter = parseQueryParameter(queryString);
         String userId = queryParameter.get(USER_ID.getKey());
         User user =  MemoryUserRepository.getInstance().findUserById(userId);
