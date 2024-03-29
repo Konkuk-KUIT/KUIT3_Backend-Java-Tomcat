@@ -1,6 +1,7 @@
 package webserver;
 
 import db.MemoryUserRepository;
+import http.util.IOUtils;
 import model.User;
 
 import java.io.*;
@@ -43,22 +44,63 @@ public class RequestHandler implements Runnable{
             //login 화면
             if (method.equals("GET") && url.equals("/user/form.html")){
                 File userFormFile = new File("webapp/user/form.html");
-                log.log(Level.SEVERE,"method : " + method);
                 byte[] body = Files.readAllBytes(userFormFile.toPath());
                 response200Header(dos, body.length);
                 responseBody(dos, body);
             }
             //user가 정보를 입력하고 signup버튼을 눌렀을때
             if (method.equals("GET") && url.contains("/user/signup")){
-                //여기서 원래는 GET이어서 querystrign에 user정보가 ?뒤에 들어가있어야하는데 왜 method는 POST로, user정보는 body로 구현되어있지?
-                //log.log(Level.INFO, "this is " + method +" method");
-                //INFO: this is POST method
-                //form.html에 있는 method = "GET"으로 바꾸어야 제대로 queryString에 user정보가 들어옴
-                ///user/signup?userId=annotatio901&password=2001&name=kim+joohye&email=annie2104%40naver.com
-
                 //userInfo Memory에 저장
                 String querySubstring = url.substring(url.indexOf("?")+1);
                 Map<String, String> userInfo = parseQueryParameter(querySubstring);
+                String userId = userInfo.get("userId");
+                String password = userInfo.get("password");
+                String name = userInfo.get("name");
+                String email = userInfo.get("email");
+                User user = new User(userId, password, name, email);
+                MemoryUserRepository db = MemoryUserRepository.getInstance(); //싱글톤
+                db.addUser(user);
+
+                //redirect 시키기
+                response302Header(dos, "/index.html");
+            }
+            if (method.equals("POST") && url.equals("/user/signup")){
+                int requestContentLength = 0;
+                while (true) {
+                    final String line = br.readLine();
+                    //log.log(Level.INFO,"check point : " + line);
+                    //***
+                    //Host: localhost
+                    //Connection: keep-alive
+                    //Content-Length: 77
+                    //Cache-Control: max-age=0
+                    //sec-ch-ua: "Google Chrome";v="123", "Not:A-Brand";v="8", "Chromium";v="123"
+                    //sec-ch-ua-mobile: ?0
+                    //sec-ch-ua-platform: "macOS"
+                    //Upgrade-Insecure-Requests: 1
+                    //Origin: http://localhost
+                    //Content-Type: application/x-www-form-urlencoded
+                    //User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36
+                    //Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+                    //Sec-Fetch-Site: same-origin
+                    //Sec-Fetch-Mode: navigate
+                    //Sec-Fetch-User: ?1
+                    //Sec-Fetch-Dest: document
+                    //Referer: http://localhost/user/form.html
+                    //Accept-Encoding: gzip, deflate, br, zstd
+                    //Accept-Language: ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7
+                    //Cookie: _xsrf=2|b0db7321|d7db5fdf21657b9746bdf8d95f1d1c4b|1709786747; username-localhost-8888="2|1:0|10:1711000933|23:username-localhost-8888|44:YjdiNzg1Njg4MjAyNDZjOThjMDNlMjJmY2MwNmNjZGI=|c08046ec9f5629558200765478cc011a4706d563a76fa8a94e3b4625d00ffe2c"
+                    //***
+                    if (line.equals("")) {
+                        break;
+                    }
+                    // header info
+                    if (line.startsWith("Content-Length")) {
+                        requestContentLength = Integer.parseInt(line.split(": ")[1]);
+                    }
+                }
+                String messageBody = IOUtils.readData(br, requestContentLength);
+                Map<String, String> userInfo = parseQueryParameter(messageBody);
                 String userId = userInfo.get("userId");
                 String password = userInfo.get("password");
                 String name = userInfo.get("name");
