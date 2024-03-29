@@ -29,7 +29,7 @@ public class RequestHandler implements Runnable{
 
     @Override
     public void run() {
-        log.log(Level.INFO, "New Client Connect! Connected IP : " + connection.getInetAddress() + ", Port : " + connection.getPort());
+        //log.log(Level.INFO, "New Client Connect! Connected IP : " + connection.getInetAddress() + ", Port : " + connection.getPort());
         try (InputStream in = connection.getInputStream(); OutputStream out = connection.getOutputStream()){
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
             DataOutputStream dos = new DataOutputStream(out);
@@ -73,6 +73,37 @@ public class RequestHandler implements Runnable{
                 response302Header(dos, ".."+HOME_URL); //TODO 상대경로 절대경로 해결하기
             }
 
+            if(method.equals("GET") && url.equals("/user/login.html")) {
+                body = Files.readAllBytes(Paths.get(ROOT_URL + url));
+            }
+
+            if(method.equals("POST") && url.equals("/user/login")) {
+                int requestContentLength = 0;
+                while (true) {
+                    final String line = br.readLine();
+                    if (line.equals("")) {
+                        break;
+                    }
+                    // header info
+                    if (line.startsWith("Content-Length")) {
+                        requestContentLength = Integer.parseInt(line.split(": ")[1]);
+                    }
+                }
+                String postRequestBody = readData(br, requestContentLength);
+                Map<String, String> map = parseQueryParameter(postRequestBody);
+                Repository repository = MemoryUserRepository.getInstance();
+                User foundUser = repository.findUserById(map.get("userId"));
+                if(foundUser!=null && foundUser.getPassword().equals(map.get("password"))) {
+                    response302HeaderWithCookie(dos, ".."+HOME_URL, "logined=true; path=/;");
+                } else {
+                    response302Header(dos, "./login_failed.html"); //TODO 상대경로 절대경로 해결하기
+                }
+            }
+
+            if(method.equals("GET") && url.equals("/user/login_failed.html")) {
+                body = Files.readAllBytes(Paths.get(ROOT_URL + url));
+            }
+
             response200Header(dos, body.length);
             responseBody(dos, body);
 
@@ -80,11 +111,25 @@ public class RequestHandler implements Runnable{
             log.log(Level.SEVERE,e.getMessage());
         }
     }
+
+    private void response302HeaderWithCookie(DataOutputStream dos, String location, String cookie) {
+        try {
+            dos.writeBytes("HTTP/1.1 302 Redirect \r\n");
+            dos.writeBytes("Location: " + location + "\r\n");
+            dos.writeBytes("Set-Cookie: " + cookie + "\r\n");
+            dos.writeBytes("\r\n");
+            dos.flush();
+        } catch (IOException e) {
+            log.log(Level.SEVERE, e.getMessage());
+        }
+    }
+
     private void response302Header(DataOutputStream dos, String location) {
         try {
-            dos.writeBytes("HTTP/1.1 302 Found \r\n");
-            dos.writeBytes("Location: " + location);
+            dos.writeBytes("HTTP/1.1 302 Redirect \r\n");
+            dos.writeBytes("Location: " + location + "\r\n");
             dos.writeBytes("\r\n");
+            dos.flush();
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());
         }
@@ -96,6 +141,7 @@ public class RequestHandler implements Runnable{
             dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
             dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
             dos.writeBytes("\r\n");
+            dos.flush();
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());
         }
