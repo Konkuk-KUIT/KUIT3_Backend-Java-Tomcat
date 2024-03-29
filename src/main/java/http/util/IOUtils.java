@@ -4,13 +4,16 @@ import java.io.BufferedReader;
 import java.io.IOException;
 
 public class IOUtils {
+
     /**
-     * @param BufferedReader br
+     * @param br
      *            Request Body를 시작하는 시점이어야
-     * @param contentLength는
+     * @param contentLength
      *            Request Header의 Content-Length 값이다.
      * @return
      * @throws IOException
+     * BufferedReader의 offset을 body 값 바로 앞에 위치시켜야한다.
+     *
      */
     public static String readData(BufferedReader br, int contentLength) throws IOException {
         char[] body = new char[contentLength];
