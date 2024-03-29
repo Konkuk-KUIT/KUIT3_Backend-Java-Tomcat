@@ -23,11 +23,6 @@ public class HttpRequest {
         // Header 파싱
         MessageHeader header = MessageHeader.from(br);
         // Body 파싱
-//        StringBuilder bodyBuilder = new StringBuilder();
-//        while (br.ready()) {
-//            bodyBuilder.append((char) br.read());
-//        }
-//        String body = bodyBuilder.toString().trim();
         String body = readData(br, header.getContentLength());
 
         return new HttpRequest(startLine, header, body);

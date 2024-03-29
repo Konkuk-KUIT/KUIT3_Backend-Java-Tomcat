@@ -1,6 +1,7 @@
 package webserver;
 
 import HttpRequest.HttpRequest;
+import HttpResponse.HttpResponse;
 import db.MemoryUserRepository;
 import HttpResponse.ResponseHeaderConstants;
 import model.User;
@@ -44,18 +45,23 @@ public class RequestHandler implements Runnable{
             // request 분석 결과 필요한 정보들
             String requestMethod = httpRequest.getMethod();
             String requestUrl = httpRequest.getUrl();
-            int requestContentLength = httpRequest.getContentLength();
+//            int requestContentLength = httpRequest.getContentLength();
             String cookies = httpRequest.getCookie();
             String requestBody = httpRequest.getBody();
+
+            // dos에 쓴 response를 통한 처리
+            HttpResponse httpResponse = new HttpResponse(out);
 
             // 1) 기본값(홈) url 설정
             if (requestMethod.equals("GET") && requestUrl.equals("/")) {
                 body = Files.readAllBytes(Paths.get(homeUrl));
+                httpResponse.forward(homeUrl);
             }
 
             // 1) .html로 끝나는 url의 경우
             if (requestMethod.equals("GET") && requestUrl.endsWith(".html")) {
                 body = Files.readAllBytes(Paths.get(BASE_URL + requestUrl));
+                httpResponse.forward(BASE_URL + requestUrl);
             }
 
             // 2) GET 방식으로 회원가입
@@ -137,7 +143,7 @@ public class RequestHandler implements Runnable{
 
             // 5) 로그인
             if (requestMethod.equals("POST") && requestUrl.equals("/user/login")) {
-                System.out.println(requestBody);
+//                System.out.println(requestBody);
                 Map<String, String> queryStringMap = parseQueryParameter(requestBody);
 
                 User user = db_user.findUserById(queryStringMap.get("userId"));
@@ -182,10 +188,11 @@ public class RequestHandler implements Runnable{
             if (requestUrl.endsWith(".css")) {
                 body = Files.readAllBytes(Paths.get(BASE_URL + requestUrl));
                 response200HeaderWithCss(dos);
+                responseBody(dos, body);
             }
 
-            response200Header(dos, body.length);
-            responseBody(dos, body);
+//            response200Header(dos, body.length);
+//            responseBody(dos, body);
 
         } catch (IOException e) {
             log.log(Level.SEVERE,e.getMessage());
