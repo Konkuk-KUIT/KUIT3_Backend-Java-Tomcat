@@ -22,7 +22,9 @@ public class MemoryUserRepository implements Repository {
     }
 
     public void addUser(User user) {
-        users.put(user.getUserId(), user);
+        if (user != null){
+            users.put(user.getUserId(), user);
+        }
     }
 
     public User findUserById(String userId) {
