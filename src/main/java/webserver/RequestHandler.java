@@ -127,7 +127,7 @@ public class RequestHandler implements Runnable{
                 response200Header(dos, body.length);
                 responseBody(dos, body);
             }
-            //http://localhost/user/userList
+            //userList 출력하기
             if (method.equals("GET") && url.equals("/user/userList")){
                 //cookie 값 확인
                 boolean cookieLogin = false;
@@ -151,6 +151,12 @@ public class RequestHandler implements Runnable{
                     responseBody(dos, body);
                 }
                 response302Header(dos, "/user/login.html");
+            }
+            if (method.equals("GET") && url.equals("/css/styles.css")){
+                dos.writeBytes("HTTP/1.1 200 OK \r\n");
+                dos.writeBytes("Content-Type: text/css\r\n");
+                dos.writeBytes("\r\n");
+                dos.flush();
             }
         } catch (IOException e) {
             log.log(Level.SEVERE,e.getMessage());
