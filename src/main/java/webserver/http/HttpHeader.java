@@ -1,14 +1,18 @@
 package webserver.http;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+
 public class HttpHeader {
 
     private int requestContentLength;
     private String cookie="";
 
 
-    public HttpHeader(final String line) {
+    public HttpHeader(BufferedReader br) throws IOException {
 
         while (true) {
+            String line=br.readLine();
             if (line.equals("")) {
                 break;
             }

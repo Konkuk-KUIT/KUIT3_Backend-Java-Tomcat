@@ -20,7 +20,7 @@ public class HttpRequest {
 
     private HttpRequest(BufferedReader br)throws IOException {
         this.startLine = new HttpStartLine(br.readLine());
-        this.header=new HttpHeader(br.readLine());
+        this.header=new HttpHeader(br);
     }
 
     public static HttpRequest from(BufferedReader reader)throws IOException {
