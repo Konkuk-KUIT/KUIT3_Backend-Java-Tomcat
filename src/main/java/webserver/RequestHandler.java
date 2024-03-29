@@ -113,6 +113,13 @@ public class RequestHandler implements Runnable{
                 }
             }
 
+            if (method.equals("GET") && url.endsWith(".css")) {
+                body = Files.readAllBytes(Paths.get("./webapp/css/style.css"));
+                response200HeaderWithCss(dos, body.length);
+                responseBody(dos, body);
+                return;
+            }
+
             response200Header(dos, body.length);
             responseBody(dos, body);
 
@@ -127,6 +134,7 @@ public class RequestHandler implements Runnable{
             dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
             dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
             dos.writeBytes("\r\n");
+            dos.flush();
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());
         }
@@ -146,6 +154,7 @@ public class RequestHandler implements Runnable{
             dos.writeBytes("HTTP/1.1 302 Redirect \r\n");
             dos.writeBytes("Location: " + path + "\r\n");
             dos.writeBytes("\r\n");
+            dos.flush();
         }catch (IOException e){
             log.log(Level.SEVERE, e.getMessage());
         }
@@ -157,9 +166,21 @@ public class RequestHandler implements Runnable{
             dos.writeBytes("Location: " + path + "\r\n");
             dos.writeBytes("Set-Cookie: logined=true" + "\r\n");        //그냥 Cookie로 하면 안되는 이유??
             dos.writeBytes("\r\n");
+            dos.flush();
         }catch (IOException e){
             log.log(Level.SEVERE, e.getMessage());
         }
     }
 
+    private void response200HeaderWithCss(DataOutputStream dos, int lengthOfBodyContent) {
+        try {
+            dos.writeBytes("HTTP/1.1 200 OK \r\n");
+            dos.writeBytes("Content-Type: text/css;charset=utf-8\r\n");
+            dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
+            dos.writeBytes("\r\n");
+            dos.flush();
+        } catch (IOException e) {
+            log.log(Level.SEVERE, e.getMessage());
+        }
+    }
 }
