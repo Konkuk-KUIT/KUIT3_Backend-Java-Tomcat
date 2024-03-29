@@ -4,6 +4,7 @@ import db.MemoryUserRepository;
 import db.Repository;
 import http.util.IOUtils;
 import model.User;
+import webserver.Enum.RequestUrl;
 
 import java.io.*;
 import java.net.Socket;
@@ -18,12 +19,6 @@ import static http.util.HttpRequestUtils.parseQueryParameter;
 public class RequestHandler implements Runnable {
     Socket connection;
     private static final Logger log = Logger.getLogger(RequestHandler.class.getName());
-    private static final String Root = "./webapp";
-    private static final String Home = "/index.html";
-    private static final String LoginFail = "/user/login_failed.html";
-    private static final String Login = "/user/login.html";
-    private static final String List = "/user/list.html";
-
     private final Repository repository;
 
     public RequestHandler(Socket connection) {
@@ -40,7 +35,7 @@ public class RequestHandler implements Runnable {
 
             byte[] body = new byte[0];
 
-            // Analyze the header
+            // 헤드분석
             String startLine = br.readLine();
             String[] startLines = startLine.split(" ");
             String method = startLines[0];
@@ -65,9 +60,9 @@ public class RequestHandler implements Runnable {
             }
 
             if (method.equals("GET") && url.equals("/")) {
-                body = Files.readAllBytes(Paths.get(Root + Home));
+                body = Files.readAllBytes(Paths.get(RequestUrl.ROOT.getUrl() + RequestUrl.HOME.getUrl()));
             } else if (method.equals("GET")) {
-                body = Files.readAllBytes(Paths.get(Root, url));
+                body = Files.readAllBytes(Paths.get(RequestUrl.ROOT.getUrl(), url));
             }
 
             //회원가입
@@ -76,7 +71,7 @@ public class RequestHandler implements Runnable {
                 Map<String, String> queryParameter = parseQueryParameter(queryString);
                 User user = new User(queryParameter.get("userId"), queryParameter.get("password"), queryParameter.get("name"), queryParameter.get("email"));
                 repository.addUser(user);
-                response302Header(dos, Home);
+                response302Header(dos, RequestUrl.HOME.getUrl());
                 return;
             }
             //로그인
@@ -88,9 +83,30 @@ public class RequestHandler implements Runnable {
                 return;
             }
 
-            if (url.equals("/user/userList") && "logined=true".equals(cookie)) {
-                body = Files.readAllBytes(Paths.get(Root + List));
+            if (url.equals(RequestUrl.LIST.getUrl()) && "logined=true".equals(cookie)) {
+
+                body = Files.readAllBytes(Paths.get(RequestUrl.ROOT.getUrl() + RequestUrl.LIST_HTML.getUrl()));
+
+                response200Header(dos, body.length);
+                responseBody(dos, body);
+                return;
+
             }
+            //css
+            if (method.equals("GET") && url.endsWith(".css")) {
+                body = Files.readAllBytes(Paths.get(RequestUrl.ROOT.getUrl() + url));
+                response200HeaderWithCss(dos, body.length);
+                responseBody(dos, body);
+                return;
+            }
+            //사진
+            if (method.equals("GET") && url.endsWith(".jpeg")) {
+                body = Files.readAllBytes(Paths.get(RequestUrl.ROOT.getUrl() + url));
+                response200Header(dos, body.length);
+                responseBody(dos, body);
+                return;
+            }
+
 
             response200Header(dos, body.length);
             responseBody(dos, body);
@@ -103,10 +119,10 @@ public class RequestHandler implements Runnable {
 
     private void login(DataOutputStream dos, Map<String, String> queryParameter, User user) {
         if (user != null && user.getPassword().equals(queryParameter.get("password"))) {
-            response302HeaderWithCookie(dos,Home);
+            response302HeaderWithCookie(dos,RequestUrl.HOME.getUrl());
             return;
         }
-        response302Header(dos,LoginFail);
+        response302Header(dos,RequestUrl.LOGIN_FAIL.getUrl());
     }
 
     private void response200Header(DataOutputStream dos, int lengthOfBodyContent) {
@@ -146,7 +162,7 @@ public class RequestHandler implements Runnable {
 
     private void response302HeaderWithCookie(DataOutputStream dos, String path) {
         try {
-            dos.writeBytes("HTTP/1.1 302 Redirect \r\n");
+            dos.writeBytes("HTTP/1.1 302 Found \r\n");
             dos.writeBytes("Location: " + path + "\r\n");
             dos.writeBytes("Set-Cookie: logined=true" + "\r\n");
             dos.writeBytes("\r\n");
