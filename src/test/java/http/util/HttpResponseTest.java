@@ -14,10 +14,16 @@ public class HttpResponseTest {
     }
 
     @Test
-    void createResponse() throws IOException {
+    void create200Response() throws IOException {
         HttpResponse httpResponse = new HttpResponse(outputStreamToFile("./src/test/java/resources/HttpResponseMessage"));
 
-        httpResponse.forward("/index.html");
+        httpResponse.forward("./webapp/index.html");
     }
 
+    @Test
+    void create302Response() throws IOException {
+        HttpResponse httpResponse = new HttpResponse(outputStreamToFile("./src/test/java/resources/HttpResponseMessage"));
+
+        httpResponse.redirect("./webapp/user/login.html");
+    }
 }

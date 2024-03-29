@@ -100,7 +100,8 @@ public class RequestHandler implements Runnable{
                     System.out.println();
                 }
 
-                response302Header(dos, "/");
+//                response302Header(dos, "/");
+                httpResponse.redirect("/");
             }
 
             // 3) POST 방식으로 회원가입 + 4) 302 status code 적용
