@@ -38,11 +38,20 @@ public class RequestHandler implements Runnable{
             String[] startLines = startLine.split(" ");
             String method = startLines[0];
             String url = startLines[1];
-            log.log(Level.INFO, "method: " + method + ", url: " + url);
-            // 정보: method: GET, url: /
-            // 정보: method: GET, url: /favicon.ico -> favicon은 브라우저에 띄울 웹사이트 아이콘으로 브라우저에서 요청!
 
-            //byte[] body = "Hello World".getBytes();
+            int requestContentLength = 0;
+            while (true) {
+                final String line = br.readLine();
+                if (line.equals("")) {
+                    break;
+                }
+                // header info
+                if (line.startsWith("Content-Length")) {
+                    requestContentLength = Integer.parseInt(line.split(": ")[1]);
+                }
+            }
+
+            log.log(Level.INFO, "method: " + method + ", url: " + url);
             byte[] body = new byte[0];
 
             if(url.equals("/")) {
@@ -52,17 +61,6 @@ public class RequestHandler implements Runnable{
             }
 
             if(method.equals("POST") && url.equals("/user/signup")) {
-                int requestContentLength = 0;
-                while (true) {
-                    final String line = br.readLine();
-                    if (line.equals("")) {
-                        break;
-                    }
-                    // header info
-                    if (line.startsWith("Content-Length")) {
-                        requestContentLength = Integer.parseInt(line.split(": ")[1]);
-                    }
-                }
                 String postRequestBody = readData(br, requestContentLength);
                 Map<String, String> map = parseQueryParameter(postRequestBody);
                 Repository repository = MemoryUserRepository.getInstance();
@@ -72,17 +70,6 @@ public class RequestHandler implements Runnable{
             }
 
             if(method.equals("POST") && url.equals("/user/login")) {
-                int requestContentLength = 0;
-                while (true) {
-                    final String line = br.readLine();
-                    if (line.equals("")) {
-                        break;
-                    }
-                    // header info
-                    if (line.startsWith("Content-Length")) {
-                        requestContentLength = Integer.parseInt(line.split(": ")[1]);
-                    }
-                }
                 String postRequestBody = readData(br, requestContentLength);
                 Map<String, String> map = parseQueryParameter(postRequestBody);
                 Repository repository = MemoryUserRepository.getInstance();
