@@ -13,7 +13,7 @@ public class ListController implements Controller{
     @Override
     public void execute(HttpRequest request, HttpResponse response) throws IOException {
         if (!request.getCookie().equals("logined=true")) {
-            response.response302Header(LOGIN.getPath());
+            response.response302Header(LOGIN_HTML.getPath());
             return;
         }
         String url = request.getPath();

@@ -11,8 +11,9 @@ public enum UrlPath {
     LOGIN_HTML("/user/login.html"),
     LOGIN("/user/login"),
     SIGNUP("/user/signup"),
-    LOGIN_FAILED("/user/login_failed.html"),
-    LIST("/user/list");
+    LOGIN_FAILED_HTML("/user/login_failed.html"),
+    LIST("/user/userList"),
+    CSS("/css/styles.css");
 
 
     private final String path;

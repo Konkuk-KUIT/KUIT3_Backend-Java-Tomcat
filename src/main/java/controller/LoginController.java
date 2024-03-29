@@ -9,8 +9,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import static http.util.HttpRequestUtils.parseQueryParameter;
-import static webserver.enums.UrlPath.INDEX;
-import static webserver.enums.UrlPath.LOGIN_FAILED;
+import static webserver.enums.UrlPath.*;
 import static webserver.enums.UserQueryKey.PASSWORD;
 import static webserver.enums.UserQueryKey.USER_ID;
 
@@ -26,6 +25,6 @@ public class LoginController implements Controller{
             response.response302HeaderWithCookie(INDEX.getPath());
             return;
         }
-        response.response302Header(LOGIN_FAILED.getPath());
+        response.response302Header(LOGIN_FAILED_HTML.getPath());
     }
 }

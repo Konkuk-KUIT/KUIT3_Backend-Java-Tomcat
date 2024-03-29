@@ -8,8 +8,8 @@ import java.util.Map;
 import static webserver.enums.UrlPath.*;
 
 public class RequestMapper {
-    private final HttpRequest request;
-    private final HttpResponse response;
+    private HttpRequest request;
+    private HttpResponse response;
     private Map<String, Controller> controllerMap;
 
     public RequestMapper(HttpRequest request, HttpResponse response) {
@@ -17,23 +17,25 @@ public class RequestMapper {
         this.response = response;
         initControllerMap();
     }
+
     private void initControllerMap(){
         controllerMap = new HashMap<>();
         controllerMap.put(HOME.getPath(), new HomeController());
+        controllerMap.put(INDEX.getPath(), new ForwardController());
+        controllerMap.put(USER_FORM.getPath(), new UserFormController());
         controllerMap.put(SIGNUP.getPath(), new SignUpController());
+        controllerMap.put(LOGIN_HTML.getPath(), new LoginHtmlController());
         controllerMap.put(LOGIN.getPath(), new LoginController());
+        controllerMap.put(LOGIN_FAILED_HTML.getPath(),new LoginHtmlController());
         controllerMap.put(LIST.getPath(), new ListController());
+        controllerMap.put(CSS.getPath(), new CssController());
     }
 
     public void proceed() throws Exception {
-        try {
-            String url = request.getPath();
-            Controller controller = controllerMap.get(url);
-
-            controller.execute(request, response);
-
-        } catch (Exception e) {
-            throw new RuntimeException("Request processing failed", e);
-        }
+        System.out.println("url =" + request.getPath());
+        System.out.println("controllerMap:" + controllerMap);
+        Controller controller = controllerMap.get(request.getPath());
+        System.out.println("controller = "+controller);
+        controller.execute(request, response);
     }
 }
