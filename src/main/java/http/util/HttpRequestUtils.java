@@ -6,13 +6,15 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class HttpRequestUtils {
-    public static Map<String, String> parseQueryParameter(String queryString) {
+    public static Map<String, String> getQueryParameter(String queryString) {
         try {
             String[] queryStrings = queryString.split("&");
 
             return Arrays.stream(queryStrings)
                     .map(q -> q.split("="))
                     .collect(Collectors.toMap(queries -> queries[0], queries -> queries[1]));
+                    // = 이전 값을 Key
+            // = 이후 값을 Value
         } catch (Exception e) {
             return new HashMap<>();
         }
