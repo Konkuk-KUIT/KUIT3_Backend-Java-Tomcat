@@ -52,16 +52,10 @@ public class RequestHandler implements Runnable{
                 System.out.println("SignUpController :"+controller);
             }
             //요구 사항 5
-            if (url.equals("/user/login.html")){
-                controller = new LoginHtmlController();
-                System.out.println("LoginHtmlController: " + controller);
-            }
-
             if (url.equals("/user/login")) {
                 controller = new LoginController();
                 System.out.println("LoginController :"+controller);
             }
-
 
             // 요구 사항 6
             if (url.equals("/user/userList")) {

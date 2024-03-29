@@ -15,7 +15,6 @@ public class HttpRequest {
     private HttpRequest() {
     }
 
-    // 정적 팩토리 메서드
     public static HttpRequest from(BufferedReader br) throws IOException {
         HttpRequest request = new HttpRequest();
         String startLine = br.readLine();
