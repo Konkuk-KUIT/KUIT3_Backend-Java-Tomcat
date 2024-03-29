@@ -8,7 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import static webserver.UrlPath.ROOT;
+import static webserver.enums.UrlPath.ROOT;
 
 public class ForwardController implements Controller {
     @Override

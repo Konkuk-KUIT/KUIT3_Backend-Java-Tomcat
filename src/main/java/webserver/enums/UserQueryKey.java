@@ -1,4 +1,4 @@
-package webserver;
+package webserver.enums;
 
 public enum UserQueryKey {
     USER_ID("userId"),

@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 
 import static java.nio.file.Files.readAllBytes;
-import static webserver.UrlPath.*;
+import static webserver.enums.UrlPath.*;
 
 public class ListController implements Controller{
     @Override

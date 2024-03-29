@@ -5,7 +5,7 @@ import controller.*;
 import java.util.HashMap;
 import java.util.Map;
 
-import static webserver.UrlPath.*;
+import static webserver.enums.UrlPath.*;
 
 public class RequestMapper {
     private final HttpRequest request;

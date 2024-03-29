@@ -9,10 +9,10 @@ import java.io.IOException;
 import java.util.Map;
 
 import static http.util.HttpRequestUtils.parseQueryParameter;
-import static webserver.UrlPath.INDEX;
-import static webserver.UrlPath.LOGIN_FAILED;
-import static webserver.UserQueryKey.PASSWORD;
-import static webserver.UserQueryKey.USER_ID;
+import static webserver.enums.UrlPath.INDEX;
+import static webserver.enums.UrlPath.LOGIN_FAILED;
+import static webserver.enums.UserQueryKey.PASSWORD;
+import static webserver.enums.UserQueryKey.USER_ID;
 
 public class LoginController implements Controller{
     @Override

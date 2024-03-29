@@ -1,4 +1,4 @@
-package webserver;
+package webserver.enums;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;

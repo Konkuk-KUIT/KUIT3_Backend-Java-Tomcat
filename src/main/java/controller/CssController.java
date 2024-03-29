@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 
 import static java.nio.file.Files.readAllBytes;
-import static webserver.UrlPath.ROOT;
+import static webserver.enums.UrlPath.ROOT;
 
 public class CssController implements Controller{
     @Override

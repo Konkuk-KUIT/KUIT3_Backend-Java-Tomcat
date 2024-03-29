@@ -7,8 +7,8 @@ import java.io.IOException;
 import java.nio.file.Paths;
 
 import static java.nio.file.Files.readAllBytes;
-import static webserver.UrlPath.LOGIN_HTML;
-import static webserver.UrlPath.ROOT;
+import static webserver.enums.UrlPath.LOGIN_HTML;
+import static webserver.enums.UrlPath.ROOT;
 
 public class LoginHtmlController implements Controller{
 

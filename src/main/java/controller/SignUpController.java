@@ -10,8 +10,8 @@ import java.io.IOException;
 import java.util.Map;
 
 import static http.util.HttpRequestUtils.parseQueryParameter;
-import static webserver.UrlPath.INDEX;
-import static webserver.UserQueryKey.*;
+import static webserver.enums.UrlPath.INDEX;
+import static webserver.enums.UserQueryKey.*;
 
 public class SignUpController implements Controller{
 

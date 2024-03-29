@@ -6,7 +6,7 @@ import webserver.HttpResponse;
 import java.io.IOException;
 import java.nio.file.Files;
 
-import static webserver.UrlPath.getHomePath;
+import static webserver.enums.UrlPath.getHomePath;
 
 public class HomeController implements Controller{
     @Override

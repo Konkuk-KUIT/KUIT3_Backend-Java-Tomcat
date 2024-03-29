@@ -7,9 +7,9 @@ import java.nio.file.Path;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static webserver.HttpHeader.*;
-import static webserver.HttpStatus.OK;
-import static webserver.HttpStatus.REDIRECT;
+import static webserver.enums.HttpHeader.*;
+import static webserver.enums.HttpStatus.OK;
+import static webserver.enums.HttpStatus.REDIRECT;
 
 
 public class HttpResponse {
