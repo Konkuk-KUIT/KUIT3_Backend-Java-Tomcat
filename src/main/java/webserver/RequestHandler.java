@@ -86,41 +86,41 @@ public class RequestHandler implements Runnable{
 
 
             //회원가입 submit제출했을 시
-//            if (url.equals(USER_SIGNUP.getUrl()) ) {
-//                String queryString = IOUtils.readData(br, requestContentLength);
-//                Map<String, String> queryParameter = parseQueryParameter(queryString);
-//                User user = new User(queryParameter.get(USER_ID.getKey()), queryParameter.get(USER_PASSWORD.getKey()), queryParameter.get(USER_NAME.getKey()), queryParameter.get(USER_EMAIL.getKey()));
-//                repository.addUser(user);
-//                response302Header(dos,HOME_URL.getUrl());
-//
-//                return;
-//            }
+            if (httpRequest.getUrl().equals(USER_SIGNUP.getUrl()) ) {
+                String queryString = IOUtils.readData(br, requestContentLength);
+                Map<String, String> queryParameter = parseQueryParameter(queryString);
+                User user = new User(queryParameter.get(USER_ID.getKey()), queryParameter.get(USER_PASSWORD.getKey()), queryParameter.get(USER_NAME.getKey()), queryParameter.get(USER_EMAIL.getKey()));
+                repository.addUser(user);
+                response302Header(dos,HOME_URL.getUrl());
+
+                return;
+            }
 
             //요구사항 5번
-//            if (url.equals(LOGIN_URL.getUrl())) {
-//                String queryString = IOUtils.readData(br, requestContentLength);
-//                Map<String, String> queryParameter = parseQueryParameter(queryString);
-//                User user = repository.findUserById(queryParameter.get(USER_ID.getKey()));
-//                login(dos, queryParameter, user);
-//                return;
-//            }
+            if (httpRequest.getUrl().equals(LOGIN_URL.getUrl())) {
+                String queryString = IOUtils.readData(br, requestContentLength);
+                Map<String, String> queryParameter = parseQueryParameter(queryString);
+                User user = repository.findUserById(queryParameter.get(USER_ID.getKey()));
+                login(dos, queryParameter, user);
+                return;
+            }
 
             //요구사항6번
-//            if (url.equals(USER_LIST.getUrl())) {
-//                if (!cookie.equals("logined=true")) {
-//                    response302Header(dos, LOGIN_URL_HTML.getUrl());
-//                    return;
-//                }
-//                body = Files.readAllBytes(Paths.get(ROOT_URL.getUrl() + LIST_URL.getUrl()));
-//            }
+            if (httpRequest.getUrl().equals(USER_LIST.getUrl())) {
+                if (!cookie.equals("logined=true")) {
+                    response302Header(dos, LOGIN_URL_HTML.getUrl());
+                    return;
+                }
+                body = Files.readAllBytes(Paths.get(ROOT_URL.getUrl() + LIST_URL.getUrl()));
+            }
 
             //요구사항7번
-//            if (method.equals(Get.getMethod()) && url.endsWith(".css")) {
-//                body = Files.readAllBytes(Paths.get(ROOT_URL.getUrl() + url));
-//                response200HeaderWithCss(dos, body.length);
-//                responseBody(dos, body);
-//                return;
-//            }
+            if (httpRequest.getMethod().equals(Get.getMethod()) && httpRequest.getUrl().endsWith(".css")) {
+                body = Files.readAllBytes(Paths.get(ROOT_URL.getUrl() + httpRequest.getUrl()));
+                response200HeaderWithCss(dos, body.length);
+                responseBody(dos, body);
+                return;
+            }
 
 
 
