@@ -1,6 +1,4 @@
 package webserver;
-
-
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -27,7 +25,7 @@ public class WebServer {
             // 연결 소켓
             Socket connection;
             while ((connection = welcomeSocket.accept()) != null) {
-                // 스레드에 작업 전달
+                //System.out.println("connection = " + connection);
                 service.submit(new RequestHandler(connection));
             }
         }
