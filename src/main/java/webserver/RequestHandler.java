@@ -56,22 +56,8 @@ public class RequestHandler implements Runnable{
             byte[] body = new byte[0];
 
 
-            int requestContentLength = 0;
-            String cookie = "";
 
-            while (true) {
-                final String line = br.readLine();
-                if (line.equals("")) {
-                    break;
-                }
-                if (line.startsWith("Content-Length")) {
-                    requestContentLength = Integer.parseInt(line.split(": ")[1]);
-                }
 
-                if (line.startsWith("Cookie")) {
-                    cookie = line.split(": ")[1];
-                }
-            }
 
 
             //서버에서 요청이 GET이고 .html로 끝난다면
@@ -87,7 +73,7 @@ public class RequestHandler implements Runnable{
 
             //회원가입 submit제출했을 시
             if (httpRequest.getUrl().equals(USER_SIGNUP.getUrl()) ) {
-                String queryString = IOUtils.readData(br, requestContentLength);
+                String queryString = IOUtils.readData(br, httpRequest.getRequestContentLength());
                 Map<String, String> queryParameter = parseQueryParameter(queryString);
                 User user = new User(queryParameter.get(USER_ID.getKey()), queryParameter.get(USER_PASSWORD.getKey()), queryParameter.get(USER_NAME.getKey()), queryParameter.get(USER_EMAIL.getKey()));
                 repository.addUser(user);
@@ -98,7 +84,7 @@ public class RequestHandler implements Runnable{
 
             //요구사항 5번
             if (httpRequest.getUrl().equals(LOGIN_URL.getUrl())) {
-                String queryString = IOUtils.readData(br, requestContentLength);
+                String queryString = IOUtils.readData(br, httpRequest.getRequestContentLength());
                 Map<String, String> queryParameter = parseQueryParameter(queryString);
                 User user = repository.findUserById(queryParameter.get(USER_ID.getKey()));
                 login(dos, queryParameter, user);
@@ -107,7 +93,7 @@ public class RequestHandler implements Runnable{
 
             //요구사항6번
             if (httpRequest.getUrl().equals(USER_LIST.getUrl())) {
-                if (!cookie.equals("logined=true")) {
+                if (!httpRequest.getCookie().equals("logined=true")) {
                     response302Header(dos, LOGIN_URL_HTML.getUrl());
                     return;
                 }

@@ -20,11 +20,13 @@ public class HttpRequest {
 
     private HttpRequest(BufferedReader br)throws IOException {
         this.startLine = new HttpStartLine(br.readLine());
-
+        this.header=new HttpHeader(br.readLine());
     }
 
     public static HttpRequest from(BufferedReader reader)throws IOException {
+
         return new HttpRequest(reader);
+
     }
 
     public String getMethod(){
@@ -34,9 +36,12 @@ public class HttpRequest {
         return startLine.getUrl();
     }
 
-
-
-
-
-
+    public int getRequestContentLength(){
+        return header.getRequestContentLength();
     }
+
+    public String  getCookie(){
+        return header.getCookie();
+    }
+
+}
