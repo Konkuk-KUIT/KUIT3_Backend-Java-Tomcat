@@ -2,6 +2,7 @@ package webserver;
 
 import db.MemoryUserRepository;
 import db.Repository;
+import http.util.HttpRequest;
 import http.util.HttpRequestUtils;
 import http.util.IOUtils;
 import model.User;
@@ -30,16 +31,15 @@ public class RequestHandler implements Runnable {
     public void run() {
         log.log(Level.INFO, "New Client Connect! Connected IP : " + connection.getInetAddress() + ", Port : " + connection.getPort());
         try (InputStream in = connection.getInputStream(); OutputStream out = connection.getOutputStream()) {
-
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
             DataOutputStream dos = new DataOutputStream(out);
 
-            // Header 분석
-            String startLine = br.readLine();
+            // HttpRequest 객체 생성
+            HttpRequest httpRequest = HttpRequest.from(br);
+            String method = httpRequest.getMethod();
+            String url = httpRequest.getPath();
 
-            String[] startLines = startLine.split(" ");
-            String method = startLines[0];
-            String url = startLines[1];
+            System.out.println("startLine = " + method + " " + url);
             System.out.println("url = " + url);
 
             byte[] body = new byte[0];
@@ -63,6 +63,7 @@ public class RequestHandler implements Runnable {
                     responseBody(dos, body);
                     return;
                 }
+
                 if ("/user/form.html".equals(url)) {
                     body = Files.readAllBytes(Paths.get("webapp/user/form.html"));
                     response200Header(dos, body.length);
@@ -70,7 +71,7 @@ public class RequestHandler implements Runnable {
                     return;
                 }
 
-                if (startLine != null && (startLine.startsWith("GET /user/login.html"))) {
+                if ("/user/login.html".equals(url)) {
                     body = Files.readAllBytes(Paths.get("webapp/user/login.html"));
                     if (body != null) {
                         response200Header(dos, body.length);
@@ -83,21 +84,19 @@ public class RequestHandler implements Runnable {
                 }
 
                 // userList 페이지 요청 처리
-                if (startLine != null && startLine.startsWith("GET /user/userList")) {
+                if ("/user/userList".equals(url)) {
                     boolean isLogin = false;
-                    while(!(startLine = br.readLine()).equals("")) {
-                        if(startLine.startsWith("Cookie")) {
-                            String cookies = startLine.split(": ")[1];
-                            isLogin = cookies.contains("logined=true");
-                        }
+                    String cookieHeader = httpRequest.getHeader("Cookie");
+                    if (cookieHeader != null) {
+                        isLogin = cookieHeader.contains("logined=true");
                     }
 
-                    if(isLogin){
+                    if (isLogin) {
                         body = Files.readAllBytes(Paths.get("webapp/user/list.html"));
-                        if(body != null){
+                        if (body != null) {
                             response200Header(dos, body.length);
                             responseBody(dos, body);
-                        } else{
+                        } else {
                             byte[] notFoundBody = "404 Not Found".getBytes();
                             response404Header(dos, notFoundBody.length);
                             responseBody(dos, notFoundBody);
@@ -125,15 +124,10 @@ public class RequestHandler implements Runnable {
                     System.out.println("좋아요");
                     int requestContentLength = 0;
 
-                    // 헤더 읽기
-                    while (true) {// HTTP 요청의 헤더 부분을 읽어서 요청 바디의 길이를 파악
-                        startLine = br.readLine();
-                        if (startLine.equals("")) { //빈 줄을 만나면 헤더 부분의 읽기를 중지
-                            break;
-                        }
-                        if (startLine.startsWith("Content-Length")) {
-                            requestContentLength = Integer.parseInt(startLine.split(": ")[1]); //Content-Length 헤더의 값을 파싱하여 contentLength 변수에 저장. ex) 'Content-Length: 1234' 에서 1234 추출
-                        }
+                    // 헤더 읽기 -> HttpRequest로 역할 분담
+                    String contentLengthHeader = httpRequest.getHeader("Content-Length");
+                    if (contentLengthHeader != null) {
+                        requestContentLength = Integer.parseInt(contentLengthHeader);
                     }
 
                     String requestBody = IOUtils.readData(br, requestContentLength);
@@ -149,16 +143,13 @@ public class RequestHandler implements Runnable {
                     System.out.println("로그인 시도");
                     int requestContentLength = 0;
 
-                    // 헤더 읽기
-                    while (true) {// HTTP 요청의 헤더 부분을 읽어서 요청 바디의 길이를 파악
-                        startLine = br.readLine();
-                        if (startLine.equals("")) { //빈 줄을 만나면 헤더 부분의 읽기를 중지
-                            break;
-                        }
-                        if (startLine.startsWith("Content-Length")) {
-                            requestContentLength = Integer.parseInt(startLine.split(": ")[1]); //Content-Length 헤더의 값을 파싱하여 contentLength 변수에 저장. ex) 'Content-Length: 1234' 에서 1234 추출
-                        }
+                    // 헤더 읽기 -> HttpRequest로 역할 분담
+                    String contentLengthHeader = httpRequest.getHeader("Content-Length");
+
+                    if (contentLengthHeader != null) {
+                        requestContentLength = Integer.parseInt(contentLengthHeader);
                     }
+
 
                     String requestBody = IOUtils.readData(br, requestContentLength);
                     System.out.println("로그인 정보 읽어오기");
@@ -170,9 +161,9 @@ public class RequestHandler implements Runnable {
 
                     // DB에서 회원정보 조회하기
                     User loginUser = MemoryUserRepository.getInstance().findUserById(userId);
-                    if(loginUser != null && loginUser.getPassword().equals(userPw)){
+                    if (loginUser != null && loginUser.getPassword().equals(userPw)) {
                         System.out.println("로그인에 성공했어요!!");
-                        try{
+                        try {
                             dos.writeBytes("HTTP/1.1 302Found \r\n");
                             dos.writeBytes("Location: " + "/" + "\r\n");
                             dos.writeBytes("Set-Cookie: logined=true \r\n"); //유저가 동일하다면 쿠키 설정
@@ -180,7 +171,7 @@ public class RequestHandler implements Runnable {
                         } catch (IOException e) {
                             log.log(Level.SEVERE, e.getMessage());
                         }
-                    } else{
+                    } else {
                         System.out.println("로그인에 실패했어요 ㅠ.");
                         System.out.println("userId = " + userId);
                         System.out.println("userPw = " + userPw);
@@ -227,7 +218,6 @@ public class RequestHandler implements Runnable {
         }
         return contentLength;
     }
-
 
 
     private void response302Header(DataOutputStream dos, String path) {

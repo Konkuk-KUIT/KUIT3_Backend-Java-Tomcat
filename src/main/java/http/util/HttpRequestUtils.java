@@ -1,11 +1,27 @@
 package http.util;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 public class HttpRequestUtils {
+
+    public static String getRequestFileName(InputStream in) throws IOException {
+        BufferedReader br = new BufferedReader(new InputStreamReader(in));
+        String requestInfo = br.readLine();
+        String requestFile = requestInfo.split(" ")[1];
+
+        return requestFile;
+    }
+
+
+
+
     public static Map<String, String> parseQueryParameter(String queryString) {
         try {
             String[] queryStrings = queryString.split("&");

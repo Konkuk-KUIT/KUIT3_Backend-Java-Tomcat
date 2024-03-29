@@ -9,4 +9,8 @@ public enum HttpMethod {
     HttpMethod(String methodType) {
         this.methodType = methodType;
     }
+
+    public String getMethodType() {
+        return methodType;
+    }
 }
