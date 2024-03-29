@@ -1,7 +1,17 @@
 package webserver;
 
+import db.MemoryUserRepository;
+import http.util.HttpRequestUtils;
+import http.util.IOUtils;
+import model.User;
+
 import java.io.*;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,15 +30,127 @@ public class RequestHandler implements Runnable{
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
             DataOutputStream dos = new DataOutputStream(out);
 
-            byte[] body = "Hello World".getBytes();
-            response200Header(dos, body.length);
-            responseBody(dos, body);
+            String headerInfo= br.readLine();
+            int requestContentLength=0;
+            String cookie=null;
+            System.out.println("headerInfo = " + headerInfo);
+            while (true) {
+                final String line = br.readLine();
+                System.out.println("line = " + line);
+                if (line.equals("")) {
+                    break;
+                }
+                // header info
+                if (line.startsWith("Content-Length")) {
+                    requestContentLength = Integer.parseInt(line.split(": ")[1]);
+                }
+                if(line.startsWith("Cookie")){
+                    cookie = (line.split(": ")[1]);
+                }
+            }
+            String payload = IOUtils.readData(br, requestContentLength);
+
+            String[] urlStrings = headerInfo.split(" ");
+            String urlString=urlStrings[1];
+
+            String[] parameters = urlString.split("\\?");
+            String url=parameters[0];
+
+            Path path=Paths.get("C:/Users/home/Desktop/2024_1학기/kuit/2주차/KUIT3_Backend-Java-Tomcat/webapp/index.html");;
+            if(url.endsWith(".css")){
+                path=Paths.get("C:/Users/home/Desktop/2024_1학기/kuit/2주차/KUIT3_Backend-Java-Tomcat/webapp"+url);
+
+                byte[] body = Files.readAllBytes(path);
+                response200HeaderWithCss(dos, body.length);
+                responseBody(dos, body);
+
+            }
+            else if(Objects.equals(url, "/index.html")||Objects.equals(url, "/")){
+                path=Paths.get("C:/Users/home/Desktop/2024_1학기/kuit/2주차/KUIT3_Backend-Java-Tomcat/webapp/index.html");
+
+                byte[] body = Files.readAllBytes(path);
+                response200Header(dos, body.length);
+                responseBody(dos, body);
+            }
+            else if(Objects.equals(url, "/user/form.html")){
+                path=Paths.get("C:/Users/home/Desktop/2024_1학기/kuit/2주차/KUIT3_Backend-Java-Tomcat/webapp/user/form.html");
+
+                byte[] body = Files.readAllBytes(path);
+                response200Header(dos, body.length);
+                responseBody(dos, body);
+            }
+
+            else if(Objects.equals(url,"/user/signup")){
+                Map<String, String> map = HttpRequestUtils.parseQueryParameter(payload);
+                User user=new User(map.get("userId"),map.get("password"),map.get("name"),map.get("email"));
+                MemoryUserRepository.getInstance().addUser(user);
+                byte[] body = Files.readAllBytes(path);
+                response302Header(dos, "/");
+                responseBody(dos, body);
+
+            }
+            else if(Objects.equals(url,"/user/login.html")){
+                path=Paths.get("C:/Users/home/Desktop/2024_1학기/kuit/2주차/KUIT3_Backend-Java-Tomcat/webapp/user/login.html");
+
+                byte[] body = Files.readAllBytes(path);
+                response200Header(dos, body.length);
+                responseBody(dos, body);
+            }
+            else if(Objects.equals(url,"/user/login")) {
+                Map<String, String> map = HttpRequestUtils.parseQueryParameter(payload);
+                User findUser=MemoryUserRepository.getInstance().findUserById(map.get("userId"));
+                if(findUser.getPassword().equals(map.get("password"))){
+                    response302HeaderWithCookie(dos,"/");
+                }
+                else{
+                    response302Header(dos,"/");
+                }
+
+                byte[] body = Files.readAllBytes(path);
+                response200Header(dos, body.length);
+                responseBody(dos, body);
+            }
+            else if(Objects.equals(url,"/user/userList")){
+                try{
+                    if(cookie.equals("logined=true")){
+                        path=Paths.get("C:/Users/home/Desktop/2024_1학기/kuit/2주차/KUIT3_Backend-Java-Tomcat/webapp/user/list.html");
+
+                        byte[] body = Files.readAllBytes(path);
+                        response200Header(dos, body.length);
+                        responseBody(dos, body);
+                    }
+                    else{
+                        path=Paths.get("C:/Users/home/Desktop/2024_1학기/kuit/2주차/KUIT3_Backend-Java-Tomcat/webapp/user/login.html");
+
+                        byte[] body = Files.readAllBytes(path);
+                        response200Header(dos, body.length);
+                        responseBody(dos, body);
+                    }
+                }
+                catch (NullPointerException e){
+                    path=Paths.get("C:/Users/home/Desktop/2024_1학기/kuit/2주차/KUIT3_Backend-Java-Tomcat/webapp/user/login.html");
+
+                    byte[] body = Files.readAllBytes(path);
+                    response200Header(dos, body.length);
+                    responseBody(dos, body);
+                }
+
+            }
 
         } catch (IOException e) {
             log.log(Level.SEVERE,e.getMessage());
         }
     }
-
+    private void response200HeaderWithCss(DataOutputStream dos, int lengthOfBodyContent) {
+        try {
+            dos.writeBytes("HTTP/1.1 200 OK \r\n");
+            dos.writeBytes("Content-Type: text/css;charset=utf-8\r\n");
+            dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
+            dos.writeBytes("\r\n");
+        } catch (IOException e) {
+            log.log(Level.SEVERE, e.getMessage());
+        }
+    }
     private void response200Header(DataOutputStream dos, int lengthOfBodyContent) {
         try {
             dos.writeBytes("HTTP/1.1 200 OK \r\n");
@@ -39,7 +161,26 @@ public class RequestHandler implements Runnable{
             log.log(Level.SEVERE, e.getMessage());
         }
     }
+    private void response302Header(DataOutputStream dos, String path) {
+        try {
+            dos.writeBytes("HTTP/1.1 302 Found \r\n");
+            dos.writeBytes("Location: " +path  + "\r\n");
+            dos.writeBytes("\r\n");
+        } catch (IOException e) {
+            log.log(Level.SEVERE, e.getMessage());
+        }
+    }
 
+    public void response302HeaderWithCookie(DataOutputStream dos, String path){
+        try {
+            dos.writeBytes("HTTP/1.1 302 Found \r\n");
+            dos.writeBytes("Location: " +path  + "\r\n");
+            dos.writeBytes("Set-Cookie: logined=true \r\n");
+            dos.writeBytes("\r\n");
+        } catch (IOException e) {
+            log.log(Level.SEVERE, e.getMessage());
+        }
+    }
     private void responseBody(DataOutputStream dos, byte[] body) {
         try {
             dos.write(body, 0, body.length);
