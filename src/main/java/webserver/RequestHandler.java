@@ -34,128 +34,132 @@ public class RequestHandler implements Runnable{
             String method = startlines[0];
             String url = startlines[1];
 
-            System.out.println("method = " + method + ", url = " + url);
+            String headerLine;
+            String cookie = "";
+            int contentLength = 0;
+
+            while(true){
+                headerLine = br.readLine();
+                if(headerLine.equals("")) break;
+                if(headerLine.startsWith("Content-Length: ")){
+                    String[] line = headerLine.split(" ");
+                    contentLength = Integer.parseInt(line[1]);
+
+//                    System.out.println("Content-Length: " + contentLength);
+                }
+                if(headerLine.startsWith("Cookie: ")){
+                    cookie = headerLine.substring(headerLine.indexOf(":") + 1);
+                }
+            }
+
+            if(method.equals("GET") && url.equals("/user/userList")){
+                log.log(Level.INFO, "/user/userList");
+
+                if(cookie.contains("logined=true")){
+                    byte[] body = Files.readAllBytes(Paths.get("./webapp/user/list.html"));
+                    response200Header(dos, "text/html", body.length);
+                    responseBody(dos, body);
+                    return;
+                }
+                response302Header(dos, "/index.html");
+                return;
+            }
+
+            if(method.equals("GET") && url.startsWith("/user/signup")){
+                log.log(Level.INFO, "/user/login GET");
+
+                String[] queryString = url.split("\\?");
+                Map<String, String> map = HttpRequestUtils.parseQueryParameter(queryString[1]);
+
+                String userId = map.get("userId");
+                String password = map.get("password");
+                String name = map.get("name");
+                String email = map.get("email");
+
+                User user = new User(userId, password, name, email);
+                MemoryUserRepository repository = MemoryUserRepository.getInstance();
+
+                repository.addUser(user);
+
+                response302Header(dos, "/index.html");
+
+                return;
+            }
 
             if(method.equals("GET")){
-                if(url.equals("/user/userList")){
-                    log.log(Level.INFO, "/user/login");
+                log.log(Level.INFO, "GET " + url);
 
-                    boolean isLogedIn = false;
-                    String headerLine;
-                    while(true){
-                        headerLine = br.readLine();
+                String contentType = "text/html";
+                byte[] body;
+                StringBuilder sb = new StringBuilder();
 
-                        if(headerLine.length() == 0) break;
-                        if(headerLine.startsWith("Cookie: logined=true")){
-                            isLogedIn = true;
-                        }
-                    }
-                    if(isLogedIn){
-                        byte[] body = Files.readAllBytes(Paths.get("./webapp/user/list.html"));
-                        response200Header(dos, "text/html", body.length);
-                        responseBody(dos, body);
-                    }
-                    else{
-                        response302Header(dos, "/index.html");
-                    }
-                }
-                else if(url.startsWith("/user/signup")){
-
-                    String[] queryString = url.split("\\?");
-                    Map<String, String> map = HttpRequestUtils.parseQueryParameter(queryString[1]);
-
-                    User user = new User(map.get("userId"), map.get("password"), map.get("name"), map.get("email"));
-                    MemoryUserRepository repository = MemoryUserRepository.getInstance();
-
-                    repository.addUser(user);
-
-//                    repository.findAll().forEach( (u)->{ System.out.println(u); } );
-
-                    response302Header(dos, "/index.html");
-                }
-                else{
-                    String contentType = "text/html";
-                    byte[] body;
-                    StringBuilder sb = new StringBuilder();
-                    sb.append("./webapp");
-                    if(url.equals("/")) {
-                        sb.append("/index.html");
-                    }
-                    else{
-                        sb.append(url);
-                    }
+                sb.append("./webapp");
+                if(url.equals("/")) {
+                    sb.append("/index.html");
 
                     body = Files.readAllBytes(Paths.get(sb.toString()));
 
-                    if(url.endsWith(".css")){
-                        contentType = "text/css";
-                    }
-
                     response200Header(dos, contentType, body.length);
                     responseBody(dos, body);
+                    return;
+                }
+
+                sb.append(url);
+
+                body = Files.readAllBytes(Paths.get(sb.toString()));
+
+                if(url.endsWith(".css")){
+                    contentType = "text/css";
+                }
+                response200Header(dos, contentType, body.length);
+                responseBody(dos, body);
+                return;
+            }
+
+
+            if(method.equals("POST") && url.equals("/user/signup")){
+                log.log(Level.INFO, "/user/signup POST");
+
+                String queryString = IOUtils.readData(br, contentLength);
+                Map<String, String> map = HttpRequestUtils.parseQueryParameter(queryString);
+
+                String userId = map.get("userId");
+                String password = map.get("password");
+                String name = map.get("name");
+                String email = map.get("email");
+
+                User user = new User(userId, password, name, email);
+
+                MemoryUserRepository repository = MemoryUserRepository.getInstance();
+
+                repository.addUser(user);
+
+//                repository.findAll().forEach( (u)->{ System.out.println("User(id=" + u.getUserId() + ", pwd=" + u.getPassword()); } );
+
+                response302Header(dos, "/index.html");
+
+                return;
+            }
+
+            if(method.equals("POST") && url.equals("/user/login")){
+                log.log(Level.INFO, "/user/login");
+
+                MemoryUserRepository repository = MemoryUserRepository.getInstance();
+
+                String queryString = IOUtils.readData(br, contentLength);
+                Map<String, String> map = HttpRequestUtils.parseQueryParameter(queryString);
+
+                System.out.println(queryString);
+
+                User result = repository.findUserById(map.get("userId"));
+                if(result != null && result.getPassword().equals(map.get("password"))){
+                    response302HeaderWithCookie(dos, "/index.html");
+                }
+                else{
+                    response302Header(dos, "/user/login_failed.html");
                 }
             }
-            if(method.equals("POST")){
-                if(url.equals("/user/signup")){
-                    String headerLine;
-                    int contentLength = 0;
-                    while(true){
-                        headerLine = br.readLine();
-                        if(headerLine.length() == 0) break;
-                        if(headerLine.startsWith("Content-Length: ")){
-                            String[] line = headerLine.split(" ");
-                            contentLength = Integer.parseInt(line[1]);
-                            System.out.println("Content-Length: " + contentLength);
-                        }
-                    }
 
-                    String queryString = IOUtils.readData(br, contentLength);
-                    Map<String, String> map = HttpRequestUtils.parseQueryParameter(queryString);
-
-                    System.out.println(queryString);
-
-                    User user = new User(map.get("userId"), map.get("password"), map.get("name"), map.get("email"));
-                    MemoryUserRepository repository = MemoryUserRepository.getInstance();
-
-                    repository.addUser(user);
-
-                    repository.findAll().forEach( (u)->{ System.out.println("User(id=" + u.getUserId() + ", pwd=" + u.getPassword()); } );
-
-                    response302Header(dos, "/index.html");
-                }
-
-                if(url.equals("/user/login")){
-                    log.log(Level.INFO, "/user/login");
-
-                    MemoryUserRepository repository = MemoryUserRepository.getInstance();
-
-                    String headerLine;
-                    int contentLength = 0;
-                    while(true){
-                        headerLine = br.readLine();
-
-                        if(headerLine.length() == 0) break;
-                        if(headerLine.startsWith("Content-Length: ")){
-                            String[] line = headerLine.split(" ");
-                            contentLength = Integer.parseInt(line[1]);
-                            System.out.println("Content-Length: " + contentLength);
-                        }
-                    }
-
-                    String queryString = IOUtils.readData(br, contentLength);
-                    Map<String, String> map = HttpRequestUtils.parseQueryParameter(queryString);
-
-                    System.out.println(queryString);
-
-                    User result = repository.findUserById(map.get("userId"));
-                    if(result != null && result.getPassword().equals(map.get("password"))){
-                        response302HeaderWithCookie(dos, "/index.html");
-                    }
-                    else{
-                        response302Header(dos, "/user/login_failed.html");
-                    }
-                }
-            }
         } catch (IOException e) {
             log.log(Level.SEVERE,e.getMessage());
         }
