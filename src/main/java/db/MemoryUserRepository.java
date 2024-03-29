@@ -1,5 +1,6 @@
 package db;
 
+import java.util.Optional;
 import model.User;
 
 import java.util.Collection;
@@ -25,8 +26,11 @@ public class MemoryUserRepository implements Repository {
         users.put(user.getUserId(), user);
     }
 
-    public User findUserById(String userId) {
-        return users.get(userId);
+    public Optional<User> findUserById(String userId) {
+        if(users.get(userId) == null) {
+            return Optional.empty();
+        }
+        return Optional.of(users.get(userId));
     }
 
     public Collection<User> findAll() {
