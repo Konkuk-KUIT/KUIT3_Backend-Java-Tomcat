@@ -1,26 +1,168 @@
 package webserver;
 
+import db.MemoryUserRepository;
+import db.Repository;
+import http.util.HttpRequestUtils;
+import http.util.IOUtils;
+import model.User;
+
 import java.io.*;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static http.util.HttpRequestUtils.parseQueryParameter;
+
 
 public class RequestHandler implements Runnable{
     Socket connection;
     private static final Logger log = Logger.getLogger(RequestHandler.class.getName());
-
+    private final Repository repository;
     public RequestHandler(Socket connection) {
         this.connection = connection;
+        repository = MemoryUserRepository.getInstance();
     }
 
     @Override
     public void run() {
         log.log(Level.INFO, "New Client Connect! Connected IP : " + connection.getInetAddress() + ", Port : " + connection.getPort());
-        try (InputStream in = connection.getInputStream(); OutputStream out = connection.getOutputStream()){
+        try (InputStream in = connection.getInputStream();
+             OutputStream out = connection.getOutputStream()){
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
             DataOutputStream dos = new DataOutputStream(out);
 
-            byte[] body = "Hello World".getBytes();
+            //헤더
+            String startLine = br.readLine();
+            String[] startLines = startLine.split(" ");
+            String method = startLines[0];
+            String url = startLines[1];
+
+            byte[] body=new byte[0];
+
+            int contentLength = 0;
+            String cookie = "";
+
+//            while (true) {
+//                final String line = br.readLine();
+//                if (line.equals("")) {
+//                    break;
+//                }
+//                // header info
+//                if (line.startsWith("Content-Length")) {
+//                    contentLength = Integer.parseInt(line.split(": ")[1]);
+//                }
+//
+//                if (line.startsWith("Cookie")) {
+//                    cookie = line.split(": ")[1];
+//                }
+//            }
+
+            while (true) {
+                final String line = br.readLine();
+                if (line.equals("")) {
+                    break;
+                }
+                // header info
+                if (line.startsWith("Content-Length")) {
+                    contentLength = Integer.parseInt(line.split(": ")[1]);
+                }
+
+                if (line.startsWith("Cookie")) {
+                    String[] cookies = line.split(": ")[1].split("; ");
+                    for (String c : cookies) {
+                        if (c.startsWith("logined=")) {
+                            cookie = c;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            //1-1 :  index.html 반환하기
+            if (method.equals("GET")&& url.endsWith(".html")) {
+                body = Files.readAllBytes(Paths.get("./webapp"+ url));
+            }
+            if (url.equals("/")) {
+                body = Files.readAllBytes(Paths.get("./webapp/index.html"));
+            }
+
+            //1-2 : GET 방식으로 회원가입하기
+            if(url.equals("/user/signup") && method.equals("GET")){
+                // 쿼리 스트링 정보를 파싱
+                String[] str = url.split("\\?");
+                String queryString = str[1];
+
+                Map<String, String> queryParameters = parseQueryParameter(queryString);
+                // User 생성
+                User user = new User(queryParameters.get("userId"), queryParameters.get("password"),
+                        queryParameters.get("name"), queryParameters.get("email"));
+
+                // 사용자 정보를 MemoryUserRepository에 저장
+                Repository MemoryUserRepository;
+                repository.addUser(user);
+
+                //1-4 : 302 status code 적용
+                //index.html로 리다이렉션
+                response302Header(dos, "/index.html");
+            }
+
+            //1-3 : POST 방식으로 회원가입하기
+
+            if(url.equals("/user/signup")){
+                String queryString = IOUtils.readData(br, contentLength);
+                Map<String, String> queryParameters = parseQueryParameter(queryString);
+
+                // User 생성
+                User user = new User(queryParameters.get("userId"), queryParameters.get("password"),
+                        queryParameters.get("name"), queryParameters.get("email"));
+
+                // 사용자 정보를 MemoryUserRepository에 저장
+                Repository MemoryUserRepository;
+                repository.addUser(user);
+
+                //1-4 : 302 status code 적용
+                //index.html로 리다이렉션
+                response302Header(dos, "/index.html");
+            }
+
+            //1-5 : 로그인하기
+            if(url.equals("/user/login")){
+                String queryString = IOUtils.readData(br, contentLength);
+                Map<String, String> queryParameter = parseQueryParameter(queryString);
+
+                //repository에서 해당 id 찾기
+                User user = repository.findUserById(queryParameter.get("userId"));
+
+                //repository에서 해당 id가 없을 경우
+                if (user == null) {
+                    response302HeaderWithCookie(dos,"/",false);
+                }
+                //repository에서 해당 id 존재
+                else {
+                    response302HeaderWithCookie(dos,"/index.html",true);
+                }
+            }
+
+            System.out.println(cookie);
+            if (url.equals("/user/userList")) {
+                if (!cookie.equals("logined=true")) {
+                    response302Header(dos,"/user/login.html");
+                    return;
+                }
+                body = Files.readAllBytes(Paths.get("./webapp/user/list.html"));
+            }
+
+            //1-7 : CSS 출력
+            if (method.equals("GET") && url.endsWith(".css")) {
+                body = Files.readAllBytes(Paths.get("./webapp" + url));
+                response200HeaderWithCss(dos, body.length);
+                responseBody(dos, body);
+            }
+
             response200Header(dos, body.length);
             responseBody(dos, body);
 
@@ -29,11 +171,33 @@ public class RequestHandler implements Runnable{
         }
     }
 
+    private void response200HeaderWithCss(DataOutputStream dos, int lengthOfBodyContent) {
+        try {
+            dos.writeBytes("HTTP/1.1 200 OK \r\n");
+            dos.writeBytes("Content-Type: text/css;charset=utf-8\r\n");
+            dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
+            dos.writeBytes("\r\n");
+            dos.flush();
+        } catch (IOException e) {
+            log.log(Level.SEVERE, e.getMessage());
+        }
+    }
+
+
     private void response200Header(DataOutputStream dos, int lengthOfBodyContent) {
         try {
             dos.writeBytes("HTTP/1.1 200 OK \r\n");
             dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
             dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
+            dos.writeBytes("\r\n");
+        } catch (IOException e) {
+            log.log(Level.SEVERE, e.getMessage());
+        }
+    }
+    private void response302Header(DataOutputStream dos, String path) {
+        try {
+            dos.writeBytes("HTTP/1.1 302 Redirect \r\n");
+            dos.writeBytes("Location: " + path + "\r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());
@@ -48,5 +212,24 @@ public class RequestHandler implements Runnable{
             log.log(Level.SEVERE, e.getMessage());
         }
     }
+
+    private void response302HeaderWithCookie(DataOutputStream dos, String path, boolean loginSuccess) {
+        try {
+            dos.writeBytes("HTTP/1.1 302 Redirect \r\n");
+            if (loginSuccess) {
+                // 성공 시 index.html로 리다이렉트 & 헤더에 Cookie: logined=true를 추가
+                dos.writeBytes("Set-Cookie: logined=true; Path=/;\r\n");
+                dos.writeBytes("Location: " + path + "\r\n");
+            } else {
+                // 실패 시 logined_failed.html로 리다이렉트
+                dos.writeBytes("Location: /user/login_failed.html\r\n");
+            }
+            dos.writeBytes("\r\n");
+            dos.flush();
+        } catch (IOException e) {
+            log.log(Level.SEVERE, e.getMessage());
+        }
+    }
+
 
 }
