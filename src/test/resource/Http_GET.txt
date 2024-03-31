@@ -1,6 +1,0 @@
-GET /user/create?userId=ms&password=0000&name=minseok HTTP/1.1
-Host: localhost:8080
-Connection: keep-alive
-Content-Length: 40
-Accept: */*
-
