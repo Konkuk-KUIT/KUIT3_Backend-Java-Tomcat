@@ -21,11 +21,13 @@ public class HttpResponse {
         this.dos = new DataOutputStream(out);
         this.httpHeader = new HttpHeader(new HashMap<>());
         this.body = new byte[0];
-        httpHeader.put("Content-Type", "text/html;charset=utf-8");
     }
 
     public void forward(String path) throws IOException {
         statusLine = new HttpResponseStatusLine("HTTP/1.1", "200", "OK");
+        if (path.endsWith(".html")) {
+            httpHeader.put("Content-Type", "text/html;charset=utf-8");
+        }
         if (path.endsWith(".css")) {
             httpHeader.put("Content-Type", "text/css");
         }
@@ -55,6 +57,13 @@ public class HttpResponse {
     public void redirect(String path) throws IOException {
         statusLine = new HttpResponseStatusLine("HTTP/1.1", "302", "Found");
         httpHeader.put("Location", path);
+        write();
+    }
+
+    public void redirectWithCookie(String path) throws IOException {
+        statusLine = new HttpResponseStatusLine("HTTP/1.1", "302", "Found");
+        httpHeader.put("Location", path);
+        httpHeader.put("Set-Cookie", "logined=true; Path=/");
         write();
     }
 
