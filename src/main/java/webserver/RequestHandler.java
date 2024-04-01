@@ -2,16 +2,17 @@ package webserver;
 
 import db.MemoryUserRepository;
 import db.Repository;
+import http.request.HttpRequest;
 import http.request.RequestURL;
-import http.util.HttpRequestUtils;
-import http.util.IOUtils;
 import model.User;
 
-import java.io.*;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -29,57 +30,39 @@ public class RequestHandler implements Runnable {
     public void run() {
         log.log(Level.INFO, "New Client Connect! Connected IP : " + connection.getInetAddress() + ", Port : " + connection.getPort());
         try (InputStream in = connection.getInputStream(); OutputStream out = connection.getOutputStream()) {
-            BufferedReader br = new BufferedReader(new InputStreamReader(in));
             DataOutputStream dos = new DataOutputStream(out);
+
+            HttpRequest httpRequest = HttpRequest.from(in);
 
             byte[] body = new byte[0];
 
-            // request message start-line 검증
-            String startLine = br.readLine();
-            String[] startLines = startLine.split(" ");
-            String method = startLines[0];
-            String url = startLines[1];
-
-            // Content-Length 랑 Cookie 가져오고, BufferedReader offset 을 request message (http) body 입구에 위치
-            int requestContentLength = 0;
-            String cookie = "";
-            String line;
-            while (!(line = br.readLine()).isEmpty()) {
-                if (line.startsWith("Content-Length")) {
-                    requestContentLength = Integer.parseInt(line.split(": ")[1]);
-                }
-                if (line.startsWith("Cookie")) {
-                    cookie = line.split(": ")[1];
-                }
-            }
-
             // 요구사항 1번
-            if (url.equals("/")) {
+            if (httpRequest.getPath().equals("/")) {
                 body = Files.readAllBytes(Paths.get(RequestURL.ROOT_URL.get() + RequestURL.HOME_URL.get()));
             }
             // url 에 맞는 웹페이지 반환
-            if (method.equals("GET") && url.endsWith(".html")) {
-                body = Files.readAllBytes(Paths.get(RequestURL.ROOT_URL.get() + url));
+            if (httpRequest.getMethod().equals("GET") && httpRequest.getPath().endsWith(".html")) {
+                body = Files.readAllBytes(Paths.get(RequestURL.ROOT_URL.get() + httpRequest.getPath()));
             }
 
             // 요구사항 2,3,4번
-            if (url.equals("/user/signup")) {
-                String queryString = makeQueryStringByMethod(method, br, requestContentLength, url);
-                Map<String, String> elements = HttpRequestUtils.parseQueryParameter(queryString);
-                repository.addUser(new User(elements.get("userId"), elements.get("password"), elements.get("name"), elements.get("email")));
+            if (httpRequest.getPath().equals("/user/signup")) {
+                User user = new User(httpRequest.getQueryParameter("userId"),
+                        httpRequest.getQueryParameter("password"),
+                        httpRequest.getQueryParameter("name"),
+                        httpRequest.getQueryParameter("email"));
+                repository.addUser(user);
                 // for redirect
                 response302Header(dos, RequestURL.HOME_URL.get());
                 return;
             }
 
             // 요구사항 5번
-            if (method.equals("POST") && url.equals("/user/login")) {
-                String queryString = IOUtils.readData(br, requestContentLength);
-                Map<String, String> elements = HttpRequestUtils.parseQueryParameter(queryString);
-                User user = repository.findUserById(elements.get("userId"));
+            if (httpRequest.getMethod().equals("POST") && httpRequest.getPath().equals("/user/login")) {
+                User user = repository.findUserById(httpRequest.getQueryParameter("userId"));
 
                 // 로그인 성공
-                if (user != null && user.getPassword().equals(elements.get("password"))) {
+                if (user != null && user.getPassword().equals(httpRequest.getQueryParameter("password"))) {
                     response302HeaderWithCookie(dos, RequestURL.HOME_URL.get());
                     return;
                 }
@@ -89,9 +72,11 @@ public class RequestHandler implements Runnable {
             }
 
             // 요구사항 6번
-            if (url.equals("/user/userList")) {
+            if (httpRequest.getPath().equals("/user/userList")) {
                 // 비로그인 상태 : redirect to /user/login.html
-                if (!cookie.equals("logined=true")) {
+                String cookie = httpRequest.getField("Cookie");
+                log.info(cookie);
+                if (cookie == null || !cookie.equals("logined=true")) {
                     response302Header(dos, RequestURL.LOGIN_URL.get());
                     return;
                 }
@@ -100,16 +85,16 @@ public class RequestHandler implements Runnable {
             }
 
             // 요구사항 7번
-            if (method.equals("GET") && url.endsWith(".css")) {
-                body = Files.readAllBytes(Paths.get(RequestURL.ROOT_URL.get() + url));
+            if (httpRequest.getMethod().equals("GET") && httpRequest.getPath().endsWith(".css")) {
+                body = Files.readAllBytes(Paths.get(RequestURL.ROOT_URL.get() + httpRequest.getPath()));
                 response200HeaderWithCss(dos, body.length);
                 responseBody(dos, body);
                 return;
             }
 
             // 이미지
-            if (method.equals("GET") && url.endsWith(".jpeg")) {
-                body = Files.readAllBytes(Paths.get(RequestURL.ROOT_URL.get() + url));
+            if (httpRequest.getMethod().equals("GET") && httpRequest.getPath().endsWith(".jpeg")) {
+                body = Files.readAllBytes(Paths.get(RequestURL.ROOT_URL.get() + httpRequest.getPath()));
                 response200Header(dos, body.length);
                 responseBody(dos, body);
                 return;
@@ -124,15 +109,6 @@ public class RequestHandler implements Runnable {
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());
         }
-    }
-
-    private String makeQueryStringByMethod(String method, BufferedReader br, int requestContentLength, String url) throws IOException {
-        if (method.equals("POST")) {
-            return IOUtils.readData(br, requestContentLength);
-        }
-        // GET 방식
-        int index = url.indexOf("?");
-        return url.substring(index + 1);
     }
 
     private void response200Header(DataOutputStream dos, int lengthOfBodyContent) {
