@@ -107,6 +107,14 @@ public class RequestHandler implements Runnable {
                 return;
             }
 
+            // 이미지
+            if (method.equals("GET") && url.endsWith(".jpeg")) {
+                body = Files.readAllBytes(Paths.get(RequestURL.ROOT_URL.get() + url));
+                response200Header(dos, body.length);
+                responseBody(dos, body);
+                return;
+            }
+
             if (body.length == 0) {
                 body = "Sorry, This page doesn't exist.".getBytes();
             }
