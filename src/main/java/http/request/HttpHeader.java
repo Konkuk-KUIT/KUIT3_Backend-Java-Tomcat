@@ -8,7 +8,7 @@ import java.util.Map;
 public class HttpHeader {
     private final Map<String, String> header; // header fields
 
-    private HttpHeader(Map<String, String> header) {
+    public HttpHeader(Map<String, String> header) {
         this.header = header;
     }
 
@@ -36,5 +36,23 @@ public class HttpHeader {
 
     public String get(String fieldName) {
         return header.get(fieldName);
+    }
+
+    public void put(String name, String value) {
+        header.put(name, value);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+
+        for (String name : header.keySet()) {
+            sb.append(name)
+                    .append(": ")
+                    .append(header.get(name))
+                    .append("\r\n");
+        }
+
+        return sb.append("\r\n").toString();
     }
 }
