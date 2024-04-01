@@ -55,7 +55,6 @@ public class HttpRequest {
         }
 
         // POST 방식인 경우
-        System.out.print(body);
         return HttpRequestUtils.parseQueryParameter(body);
     }
 

@@ -1,6 +1,5 @@
 package webserver;
 
-import controller.*;
 import db.MemoryUserRepository;
 import db.Repository;
 import http.request.HttpRequest;
@@ -17,7 +16,6 @@ public class RequestHandler implements Runnable {
     Socket connection;
     private static final Logger log = Logger.getLogger(RequestHandler.class.getName());
     private final Repository repository;
-    private Controller controller = new ForwardController();    // 요구사항 1,7번 및 이미지
 
     public RequestHandler(Socket connection) {
         this.connection = connection;
