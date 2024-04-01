@@ -5,21 +5,21 @@ public class HttpResponseStatusLine {
     private String statusCode;
     private String statusMessage;
 
-    public HttpResponseStatusLine(String version, String statusMessage, String statusCode) {
+    public HttpResponseStatusLine(String version, String statusCode, String statusMessage) {
         this.version = version;
-        this.statusMessage = statusMessage;
         this.statusCode = statusCode;
+        this.statusMessage = statusMessage;
     }
 
     public String getVersion() {
         return version;
     }
 
-    public String getStatusMessage() {
-        return statusMessage;
-    }
-
     public String getStatusCode() {
         return statusCode;
+    }
+
+    public String getStatusMessage() {
+        return statusMessage;
     }
 }
