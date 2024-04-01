@@ -4,11 +4,13 @@ import request.request;
 import db.MemoryUserRepository;
 import http.util.HttpRequestUtils;
 import http.util.IOUtils;
+import response.response;
 
 import javax.swing.*;
 import java.io.*;
 import java.net.Socket;
 import java.util.*;
+import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.nio.file.Files;
@@ -26,33 +28,40 @@ public class RequestHandler implements Runnable{
     @Override
     public void run() {
         log.log(Level.INFO, "New Client Connect! Connected IP : " + connection.getInetAddress() + ", Port : " + connection.getPort());
-        String path=null;
-        BufferedReader br=null;
-        DataOutputStream dos=null;
-        String requestLine=null;
+        String path = null;
+        BufferedReader br = null;
+        DataOutputStream dos = null;
+        String requestLine = null;
         StringBuilder redirection = new StringBuilder("");
         StringBuilder headerAdder = new StringBuilder("");
         boolean cssre = false;
 
 
-        try (InputStream in = connection.getInputStream(); OutputStream out = connection.getOutputStream()){
+        try (InputStream in = connection.getInputStream(); OutputStream out = connection.getOutputStream()) {
             br = new BufferedReader(new InputStreamReader(in));
             dos = new DataOutputStream(out);
 
+
+            //New Code
+            request REQ = request.from(br);
+            response RES = response.from(dos);
+            System.out.println("set req res");
+            ControllerMapper conMap = new ControllerMapper();
+            System.out.println("end set Mapper");
+            if (conMap.execute(REQ, RES)) {
+                System.out.println("end servelt");
+                return;
+            }
+        } catch (IOException e) {
+            System.out.println("eror");
+            log.log(Level.SEVERE, e.getMessage());
+        }
+    }}
+            /*
             requestLine= br.readLine();
             Map<String, String> query=null;
             Map<String, String> requestHeader=null;
-            //File Index = new File("index.html");
-            //byte[] body = "Hello World".getBytes();
 
-            //request work
-
-        /*try{
-
-        }catch(IOException e){
-            System.out.println("read line eror");
-            log.log(Level.SEVERE,e.getMessage());
-        }*/
             String method = null;
             if(requestLine!=null){
                 System.out.println("request Line : "+ requestLine);
@@ -87,7 +96,6 @@ public class RequestHandler implements Runnable{
                     System.out.println("path : " + path);
                 }
             }
-
             requestHeader = getHeader(br);
             System.out.println("req Header----");
             requestHeader.forEach((key, value) -> {
@@ -109,14 +117,11 @@ public class RequestHandler implements Runnable{
                 System.out.println("body print : "+body);
             }
 
-
-
             //response
             byte[] responesBody=null;
 
             //System.out.println(Paths.get("./index.html").toAbsolutePath());
             responesBody = getBody(path,query,method,body,requestHeader,redirection,headerAdder,cssre);
-
 
             //check User repository
             System.out.println("--------User---------\n");
@@ -127,7 +132,6 @@ public class RequestHandler implements Runnable{
 
             System.out.println("file leng : "+ responesBody.length);
             System.out.println("\n\nredirection:"+redirection);
-
 
             if(responesBody==null){
                 System.out.println("wNULL");
@@ -153,12 +157,6 @@ public class RequestHandler implements Runnable{
             }
 
 
-
-        } catch (IOException e) {
-            System.out.println("eror");
-            log.log(Level.SEVERE,e.getMessage());
-        }
-
     }
 
     private byte[] getBody(String path,Map<String, String> query,String method , String body,Map<String, String> requestHeader,StringBuilder redirection,StringBuilder headAdder,boolean css){
@@ -175,6 +173,8 @@ public class RequestHandler implements Runnable{
             }
 
         }
+        //TODO
+        //  response class Test코드 작성
 
         if(path.equals("/")||path.equals("/index.html")){
             try {
@@ -251,8 +251,6 @@ public class RequestHandler implements Runnable{
                     System.out.println("error name "+ e);
                     log.log(Level.SEVERE,e.getMessage());
                 }
-
-
             }
             if(method.equals("POST")){
                 System.out.println(" POST body start:"+body);
@@ -364,7 +362,7 @@ public class RequestHandler implements Runnable{
         User user = new User(userMap.get("userId"),userMap.get("password"),userMap.get("name"),userMap.get("email"));
         return user;
     }
-    private Map<String,String> getHeader(BufferedReader br/*, Map<String,String> reqHeader*/){
+    private Map<String,String> getHeader(BufferedReader br*//*, Map<String,String> reqHeader*//*){
         String line=null;
         String[] pair;
         Map<String,String> reqHeader= new HashMap<String,String>();
@@ -441,14 +439,4 @@ public class RequestHandler implements Runnable{
         }
     }
 
-    private void responseBody(DataOutputStream dos, byte[] body) {
-        try {
-            dos.write(body, 0, body.length);
-            dos.flush();
-        } catch (IOException e) {
-            System.out.println("responseBody eror2");
-            log.log(Level.SEVERE, e.getMessage());
-        }
-    }
-
-}
+    */
