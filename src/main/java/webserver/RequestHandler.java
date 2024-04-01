@@ -2,6 +2,7 @@ package webserver;
 
 import db.MemoryUserRepository;
 import db.Repository;
+import http.request.RequestURL;
 import http.util.HttpRequestUtils;
 import http.util.IOUtils;
 import model.User;
@@ -17,12 +18,6 @@ import java.util.logging.Logger;
 public class RequestHandler implements Runnable {
     Socket connection;
     private static final Logger log = Logger.getLogger(RequestHandler.class.getName());
-    private static final String ROOT_URL = "./webapp";
-    private static final String HOME_URL = "/index.html";
-    private static final String LOGIN_FAILED_URL = "/user/login_failed.html";
-    private static final String LOGIN_URL = "/user/login.html";
-    private static final String LIST_URL = "/user/list.html";
-
     private final Repository repository;
 
     public RequestHandler(Socket connection) {
@@ -60,11 +55,11 @@ public class RequestHandler implements Runnable {
 
             // 요구사항 1번
             if (url.equals("/")) {
-                body = Files.readAllBytes(Paths.get(ROOT_URL + HOME_URL));
+                body = Files.readAllBytes(Paths.get(RequestURL.ROOT_URL.get() + RequestURL.HOME_URL.get()));
             }
             // url 에 맞는 웹페이지 반환
             if (method.equals("GET") && url.endsWith(".html")) {
-                body = Files.readAllBytes(Paths.get(ROOT_URL + url));
+                body = Files.readAllBytes(Paths.get(RequestURL.ROOT_URL.get() + url));
             }
 
             // 요구사항 2,3,4번
@@ -73,7 +68,7 @@ public class RequestHandler implements Runnable {
                 Map<String, String> elements = HttpRequestUtils.parseQueryParameter(queryString);
                 repository.addUser(new User(elements.get("userId"), elements.get("password"), elements.get("name"), elements.get("email")));
                 // for redirect
-                response302Header(dos, HOME_URL);
+                response302Header(dos, RequestURL.HOME_URL.get());
                 return;
             }
 
@@ -85,11 +80,11 @@ public class RequestHandler implements Runnable {
 
                 // 로그인 성공
                 if (user != null && user.getPassword().equals(elements.get("password"))) {
-                    response302HeaderWithCookie(dos, HOME_URL);
+                    response302HeaderWithCookie(dos, RequestURL.HOME_URL.get());
                     return;
                 }
                 // 로그인 실패
-                response302Header(dos, LOGIN_FAILED_URL);
+                response302Header(dos, RequestURL.LOGIN_FAILED_URL.get());
                 return;
             }
 
@@ -97,16 +92,16 @@ public class RequestHandler implements Runnable {
             if (url.equals("/user/userList")) {
                 // 비로그인 상태 : redirect to /user/login.html
                 if (!cookie.equals("logined=true")) {
-                    response302Header(dos, LOGIN_URL);
+                    response302Header(dos, RequestURL.LOGIN_URL.get());
                     return;
                 }
                 // 로그인 상태 : user/list.html 반환
-                body = Files.readAllBytes(Paths.get(ROOT_URL + LIST_URL));
+                body = Files.readAllBytes(Paths.get(RequestURL.ROOT_URL.get() + RequestURL.LIST_URL.get()));
             }
 
             // 요구사항 7번
             if (method.equals("GET") && url.endsWith(".css")) {
-                body = Files.readAllBytes(Paths.get(ROOT_URL + url));
+                body = Files.readAllBytes(Paths.get(RequestURL.ROOT_URL.get() + url));
                 response200HeaderWithCss(dos, body.length);
                 responseBody(dos, body);
                 return;
