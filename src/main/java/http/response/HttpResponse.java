@@ -40,13 +40,13 @@ public class HttpResponse {
 
     private void setBody(String path) throws IOException {
         if (path.equals("/")) {
-            body = Files.readAllBytes(Paths.get(RequestURL.ROOT_URL.get() + RequestURL.HOME_URL.get()));
+            body = Files.readAllBytes(Paths.get(RequestURL.ROOT.get() + RequestURL.HOME_URL.get()));
         }
         if (path.endsWith(".html") || path.endsWith(".css") || path.endsWith(".jpeg")) {
-            body = Files.readAllBytes(Paths.get(RequestURL.ROOT_URL.get() + path));
+            body = Files.readAllBytes(Paths.get(RequestURL.ROOT.get() + path));
         }
         if (path.equals("/user/userList")) {
-            body = Files.readAllBytes(Paths.get(RequestURL.ROOT_URL.get() + RequestURL.LIST_URL));
+            body = Files.readAllBytes(Paths.get(RequestURL.ROOT.get() + RequestURL.LIST_URL));
         }
         if (body.length == 0) {
             body = "Sorry, This page doesn't exist.".getBytes();

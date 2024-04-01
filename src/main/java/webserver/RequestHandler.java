@@ -32,26 +32,9 @@ public class RequestHandler implements Runnable {
             HttpRequest httpRequest = HttpRequest.from(in);
             HttpResponse httpResponse = new HttpResponse(out);
 
-            // 요구사항 1번
-            if (httpRequest.getPath().equals("/")) {
-                controller = new HomeController();
-            }
-
-            // 요구사항 2,3,4번
-            if (httpRequest.getPath().equals("/user/signup")) {
-                controller = new SignUpController();
-            }
-
-            // 요구사항 5번
-            if (httpRequest.getMethod().equals("POST") && httpRequest.getPath().equals("/user/login")) {
-                controller = new LoginController();
-            }
-
-            // 요구사항 6번
-            if (httpRequest.getPath().equals("/user/userList")) {
-               controller = new ListController();
-            }
-            controller.execute(httpRequest, httpResponse);
+            // 요청에 맞는 응답을 처리
+            RequestMapper requestMapper = new RequestMapper(httpRequest, httpResponse);
+            requestMapper.proceed();
 
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());
